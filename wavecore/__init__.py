@@ -9,14 +9,14 @@ The initial implementation focuses on a 1D updated-Lagrangian
 bar using a structure-of-arrays ECS-style architecture.
 """
 
-from wavecore.components import (
+from .components import (
     NodeComponents,
     ElementComponents,
     TimeComponents,
     World,
 )
 
-from wavecore.builders import create_uniform_bar
+from .builders import create_uniform_bar
 
 
 __all__ = [

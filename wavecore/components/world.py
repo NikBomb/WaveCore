@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from numpy.typing import NDArray
 import numpy as np
+from .nodes import NodeComponents
+from .elements import ElementComponents
+from .time import TimeComponents
 
 FloatArray = NDArray[np.float64]
 

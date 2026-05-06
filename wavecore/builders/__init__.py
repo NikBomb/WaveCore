@@ -2,7 +2,7 @@
 WaveCore builders for preset problems
 """
 
-from wavecore.builders import create_uniform_bar
+from .create_uniform_bar import create_uniform_bar
 
 
 __all__ = [
