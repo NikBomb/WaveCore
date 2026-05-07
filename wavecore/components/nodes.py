@@ -7,6 +7,7 @@ FloatArray = NDArray[np.float64]
 @dataclass(slots=True)
 class NodeComponents:
     X : FloatArray              # Nodal reference coordinate
+    x:  FloatArray              # Nodal current coordinate
     u:  FloatArray              # Nodal displacements
     v:  FloatArray              # Nodal velocities
     a:  FloatArray              # Nodal accelerations

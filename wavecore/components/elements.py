@@ -24,6 +24,7 @@ class ElementComponents:
     l: FloatArray          # Current element length
     rho: FloatArray        # Current density
     D: FloatArray          # Spatial velocity gradient / rate of deformation
+    J: FloatArray          # Jacobian
     dt_e: FloatArray       # Element critical timestep
 
     @property
