@@ -19,6 +19,8 @@ from .boundaries import apply_nodal_disp_bc, apply_nodal_velocity_bc
 
 from .advance import advance_nodes_displacement, advance_nodes_velocity
 
+from .mass import update_lumped_node_mass, clear_node_mass
+
 __all__ = [
     # Kinematics 
                          update_element_density, 
@@ -43,5 +45,8 @@ __all__ = [
                         apply_nodal_velocity_bc,
     # Advance
                         advance_nodes_velocity,
-                        advance_nodes_displacement
+                        advance_nodes_displacement,
+    # Mass
+                        update_lumped_node_mass,
+                        clear_node_mass,
 ]
