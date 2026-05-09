@@ -35,3 +35,26 @@ Pag 333. Box 6.1
 13. Output; if simulation not complete go to 4.
 
 """
+
+# At the fist timestep we need all the state. 
+# Given that the 1d simulation is driven by velocity, 
+# The displacement, stress etc is zero but we need to
+# compute the timestep.
+
+from wavecore.components import NodeComponents, ElementComponents, TimeComponents
+from wavecore.systems.boundaries import apply_nodal_velocity_bc
+from wavecore.systems.timestep import update_next_timestep
+
+def applied_velocity_BC_prepare(nodes: NodeComponents, elements: ElementComponents, bc: callable[[float],float]) :
+    """
+    Computes step 1 to 4 of box above, at timestep 0
+    
+    """
+
+    apply_nodal_velocity_bc(nodes, 0.0, 0.0, bc )
+
+
+
+    
+
+

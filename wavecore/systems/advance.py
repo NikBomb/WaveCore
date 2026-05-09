@@ -16,7 +16,7 @@ def advance_nodes_velocity(nodes: NodeComponents, time: TimeComponents) -> None:
     nodes.v
 
     """
-    nodes.v[:] += nodes.a * 0.5 * time.dt 
+    nodes.v[:] += nodes.a * 0.5 * time.dt_current
 
 def advance_nodes_displacement(nodes: NodeComponents, time: TimeComponents) -> None:
     """
@@ -26,5 +26,5 @@ def advance_nodes_displacement(nodes: NodeComponents, time: TimeComponents) -> N
     nodes.u 
     """
 
-    nodes.u[:] += nodes.v + nodes.a*time.dt
+    nodes.u[:] += nodes.v + nodes.a*time.dt_current
 

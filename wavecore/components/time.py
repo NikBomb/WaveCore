@@ -11,13 +11,17 @@ class TimeComponents:
     """
 
     t: float
-    dt: float
+    dt_current: float
+    dt_next: float
     step: int
     dt_safety_factor: float
     is_initialized: bool = False
 
     def validate(self) -> None:
-        if self.dt <= 0.0 and self.is_initialized:
+        if self.dt_current <= 0.0 and self.is_initialized:
+            raise ValueError("Time step dt must be positive.")
+
+        if self.dt_next <= 0.0 and self.is_initialized:
             raise ValueError("Time step dt must be positive.")
 
         if self.dt_safety_factor > 1.0:

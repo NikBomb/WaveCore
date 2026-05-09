@@ -61,7 +61,7 @@ def update_next_timestep(elements: ElementComponents, time: TimeComponents) -> N
     time.dt
     """
     dt = float(np.min(elements.dt_e))
-    time.dt = time.safety_factor * dt
+    time.dt_next = time.safety_factor * dt
 
 
 def update_timestep(
