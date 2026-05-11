@@ -1,6 +1,6 @@
 import numpy as np
 from wavecore.components import NodeComponents
-
+from typing import Callable
 
 """
 Boundary system:
@@ -10,7 +10,7 @@ This system is responsible for updating the velocity or boundary conditions
 """
 
 
-def apply_nodal_velocity_bc(nodes: NodeComponents, idx: int, time: float, timeFct: callable[[float], float]) -> None:
+def apply_nodal_velocity_bc(nodes: NodeComponents, idx: int, time: float, timeFct: Callable[[float], float]) -> None:
     """
     Apply velocity BC at node idx and time t,
     using function timeFct
@@ -22,7 +22,7 @@ def apply_nodal_velocity_bc(nodes: NodeComponents, idx: int, time: float, timeFc
 
     nodes.v[idx] = timeFct(time)
 
-def apply_nodal_disp_bc(nodes: NodeComponents, idx: int, time: float, timeFct: callable[[float], float]) -> None:
+def apply_nodal_disp_bc(nodes: NodeComponents, idx: int, time: float, timeFct: Callable[[float], float]) -> None:
     """
     Apply dispacement BC at node idx and time t,
     using function timeFct

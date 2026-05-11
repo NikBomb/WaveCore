@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+           "name": "Python: Long Bar",
+           "type": "debugpy",
+           "request": "launch",
+           "program": "${workspaceRoot}/examples/longBar.py",
+           "console": "integratedTerminal",
+           "env": { "PYTHONPATH": "${workspaceRoot}"}
+        }
+    ]
+}

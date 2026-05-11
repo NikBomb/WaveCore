@@ -72,7 +72,8 @@ def create_uniform_bar(
 
     c = np.sqrt(E / rho)
     dt_e = l / c
-    dt = safety_factor * np.min(dt_e)
+    dt_next = safety_factor * np.min(dt_e)
+    J = l * 0.5
 
     # Lumped nodal mass
     m = np.zeros(num_nodes, dtype=np.float64)
@@ -82,8 +83,10 @@ def create_uniform_bar(
     m[:-1] += 0.5 * element_mass
     m[1:] += 0.5 * element_mass
 
+
     nodes = NodeComponents(
         X=X,
+        x=X.copy(),
         u=u,
         v=v,
         a=a,
@@ -103,11 +106,14 @@ def create_uniform_bar(
         rho=rho,
         D=D,
         dt_e=dt_e,
+        J=J
     )
 
     time = TimeComponents(
         t=0.0,
-        dt=dt,
+        dt_next=dt_next,
+        dt_current = dt_next,
+        dt_safety_factor= safety_factor,
         step=0,
     )
 

@@ -41,20 +41,27 @@ Pag 333. Box 6.1
 # The displacement, stress etc is zero but we need to
 # compute the timestep.
 
-from wavecore.components import NodeComponents, ElementComponents, TimeComponents
+from wavecore.components import NodeComponents, ElementComponents, TimeComponents, World
 from wavecore.systems.boundaries import apply_nodal_velocity_bc
 from wavecore.systems.timestep import update_next_timestep
+from typing import Callable
 
-def applied_velocity_BC_prepare(nodes: NodeComponents, elements: ElementComponents, bc: callable[[float],float]) :
+def applied_velocity_BC_prepare(nodes: NodeComponents, elements: ElementComponents, bc: Callable[[float],float]) :
     """
     Computes step 1 to 4 of box above, at timestep 0
     
     """
 
-    apply_nodal_velocity_bc(nodes, 0.0, 0.0, bc )
+    apply_nodal_velocity_bc(nodes, idx= nodes.num_nodes - 1, time= 0.0, timeFct = bc)
+
+def continue_from_timestep_1_until_end(world: World, end_time: float)-> None
+    
 
 
 
+def simulate_from_0_to(time: float, world:World, bc: Callable[[float],float] ):
+    applied_velocity_BC_prepare(world.nodes, world.elements, bc)
+    #In the example case after applying velocity BC we can update the timestep and start with the rest of simulation. 
     
 
 

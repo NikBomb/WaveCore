@@ -21,6 +21,8 @@ from .advance import advance_nodes_displacement, advance_nodes_velocity
 
 from .mass import update_lumped_node_mass, clear_node_mass
 
+from .explicitdynamics import simulate_from_0_to
+
 __all__ = [
     # Kinematics 
                          update_element_density, 
@@ -49,4 +51,6 @@ __all__ = [
     # Mass
                         update_lumped_node_mass,
                         clear_node_mass,
+    # Explicit dynamics 
+                        simulate_from_0_to
 ]
