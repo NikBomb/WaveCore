@@ -26,5 +26,5 @@ def advance_nodes_displacement(nodes: NodeComponents, time: TimeComponents) -> N
     nodes.u 
     """
 
-    nodes.u[:] += nodes.v + nodes.a*time.dt_current
+    nodes.u[:] += nodes.v*time.dt_current
 

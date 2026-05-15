@@ -43,4 +43,4 @@ def update_linear_elastic_stress(
         sigma += E * delta_eps
     """
 
-    elements.sigma[:] += elements.E * elements.D * time.dt
+    elements.sigma[:] += elements.E * elements.D * time.dt_current

@@ -110,3 +110,18 @@ def initialize_timestep(
     time.is_initialized = True
 
     time.validate()
+
+def advance_time(time_component: TimeComponents):
+    """
+    Advance the time, and update current timestep
+
+    Writes
+    ------
+
+    time.t
+    time.dt_current
+    time.dt_next = 0.0
+    """
+    time_component.t += time_component.dt_next
+    time_component.dt_current = time_component.dt_next
+    time_component.dt_next = 0.0

@@ -50,6 +50,17 @@ def update_node_current_position(nodes: NodeComponents) -> None:
 
     nodes.x = nodes.X + nodes.u
 
+def update_node_acceleration(nodes:NodeComponents) -> None:
+    """
+    Update current accelerations
+
+    Writes
+    ------
+    nodes.a
+    """
+
+    nodes.a[:] = nodes.f/nodes.m
+
 def update_element_jacobian(elements: ElementComponents) -> None:
     """
     Update element Jacobians
@@ -70,7 +81,7 @@ def update_element_rate_of_deformation(elements: ElementComponents, nodes: NodeC
     elements.D
     """
 
-    elements.D[:] = (nodes.ve[1:] - nodes.ve[:-1]) / elements.l
+    elements.D[:] = (nodes.v[1:] - nodes.v[:-1]) / elements.l
 
 def update_element_kinematics(
     elements: ElementComponents,
@@ -88,7 +99,7 @@ def update_element_kinematics(
     """
 
     update_node_current_position(nodes)
-    update_element_length(nodes, elements)
+    update_element_length(nodes=nodes, elements=elements)
     update_element_jacobian(elements)
     update_element_density(elements)
-    update_element_rate_of_deformation(nodes, elements)
+    update_element_rate_of_deformation(nodes=nodes, elements=elements)

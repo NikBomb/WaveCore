@@ -43,7 +43,11 @@ Pag 333. Box 6.1
 
 from wavecore.components import NodeComponents, ElementComponents, TimeComponents, World
 from wavecore.systems.boundaries import apply_nodal_velocity_bc
-from wavecore.systems.timestep import update_next_timestep
+from wavecore.systems.timestep import update_next_timestep, advance_time, update_timestep
+from wavecore.systems.advance import advance_nodes_velocity, advance_nodes_displacement
+from wavecore.systems.kinematics import update_element_kinematics, update_node_acceleration
+from wavecore.systems.forces import update_forces
+from wavecore.systems.material import update_linear_elastic_stress
 from typing import Callable
 
 def applied_velocity_BC_prepare(nodes: NodeComponents, elements: ElementComponents, bc: Callable[[float],float]) :
@@ -54,14 +58,28 @@ def applied_velocity_BC_prepare(nodes: NodeComponents, elements: ElementComponen
 
     apply_nodal_velocity_bc(nodes, idx= nodes.num_nodes - 1, time= 0.0, timeFct = bc)
 
-def continue_from_timestep_1_until_end(world: World, end_time: float)-> None
-    
-
-
-
 def simulate_from_0_to(time: float, world:World, bc: Callable[[float],float] ):
     applied_velocity_BC_prepare(world.nodes, world.elements, bc)
     #In the example case after applying velocity BC we can update the timestep and start with the rest of simulation. 
     
+    while world.time.t < time:
+        advance_time(world.time)
+        advance_nodes_velocity(world.nodes, world.time)
+        apply_nodal_velocity_bc(nodes=world.nodes, idx= world.nodes.num_nodes - 1, time = world.time.t + 0.5*world.time.dt_current, timeFct = bc)
+        advance_nodes_displacement(world.nodes, world.time)
+        update_element_kinematics(world.elements, world.nodes)
+        update_linear_elastic_stress(elements=world.elements, time=world.time)
+        update_forces(elements=world.elements, nodes=world.nodes)
+        update_timestep(elements=world.elements, time=world.time)
+        update_node_acceleration(nodes=world.nodes)
+        advance_nodes_velocity(world.nodes, world.time)
 
+
+
+
+
+
+
+
+        
 
