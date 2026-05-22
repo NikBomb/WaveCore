@@ -15,7 +15,7 @@ target_sources(wavecore_tests
         test_main.cpp
         mesh/test_structured_quad_mesh.cpp
         mesh/test_nodes.cpp
-        elements/test_element_traits.cpp
+        elements/test_element_concept.cpp
 )
 
 target_link_libraries(wavecore_tests
