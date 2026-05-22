@@ -1,0 +1,32 @@
+function(wavecore_set_project_warnings target_name)
+    target_compile_options(${target_name}
+        PRIVATE
+            $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:
+                -Wall
+                -Wextra
+                -Wpedantic
+                -Wconversion
+                -Wsign-conversion
+                -Wshadow
+                -Wnon-virtual-dtor
+                -Wold-style-cast
+                -Wcast-align
+                -Wunused
+                -Woverloaded-virtual
+                -Wnull-dereference
+                -Wdouble-promotion
+                -Wformat=2
+            >
+            $<$<CXX_COMPILER_ID:MSVC>:
+                /W4
+            >
+    )
+
+     if(WAVECORE_ENABLE_WARNINGS_AS_ERRORS)
+        target_compile_options(${target_name}
+            PRIVATE
+                $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
+                $<$<CXX_COMPILER_ID:MSVC>:/WX>
+        )
+    endif()
+endfunction()
