@@ -6,7 +6,7 @@ target_sources(wavecore
 
 target_include_directories(wavecore
     PUBLIC
-        ${PROJECT_SRC_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include
 )
 
 target_compile_features(wavecore

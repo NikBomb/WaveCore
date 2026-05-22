@@ -13,7 +13,8 @@ add_executable(wavecore_tests)
 target_sources(wavecore_tests
     PRIVATE
         test_main.cpp
-        mesh/test_structured_quad_mesh.cpp 
+        mesh/test_structured_quad_mesh.cpp
+        mesh/test_nodes.cpp 
 )
 
 target_link_libraries(wavecore_tests
