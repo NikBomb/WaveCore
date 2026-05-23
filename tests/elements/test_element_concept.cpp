@@ -16,3 +16,8 @@ TEST_CASE("Quad4 conforms concept") {
 TEST_CASE("Fake element does not conform concept") {
     static_assert(!wavecore::IElement<FakeElement>);
 }
+
+TEST_CASE ("Quad4 has charateristic length") {
+    const wavecore::Quad4 element;
+    CHECK(element.measure() == doctest::Approx(4.0));
+}

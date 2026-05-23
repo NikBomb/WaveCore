@@ -1,0 +1,58 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "gcc14-debug",
+      "displayName": "GCC 14 Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/gcc14-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc-14",
+        "CMAKE_CXX_COMPILER": "g++-14",
+        "CMAKE_CXX_STANDARD": "23",
+        "WAVECORE_ENABLE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "gcc14-sanitize",
+      "displayName": "GCC 14 Debug + Sanitizers",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/gcc14-sanitize",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc-14",
+        "CMAKE_CXX_COMPILER": "g++-14",
+        "CMAKE_CXX_STANDARD": "23",
+        "WAVECORE_ENABLE_TESTS": "ON",
+        "WAVECORE_ENABLE_SANITIZERS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc14-debug",
+      "configurePreset": "gcc14-debug"
+    },
+    {
+      "name": "gcc14-sanitize",
+      "configurePreset": "gcc14-sanitize"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "gcc14-debug",
+      "configurePreset": "gcc14-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gcc14-sanitize",
+      "configurePreset": "gcc14-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

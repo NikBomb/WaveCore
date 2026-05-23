@@ -1,7 +1,6 @@
 #ifndef WAVECORE_ELEMENT_TRAITS_HPP
 #define WAVECORE_ELEMENT_TRAITS_HPP
 
-#include "wavecore/elements/Quad4.hpp"
 #include <cstddef>
 #include <concepts>
 
