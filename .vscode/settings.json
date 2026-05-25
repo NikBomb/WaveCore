@@ -1,5 +1,6 @@
 {
   "clangd.arguments": [
-    "--compile-commands-dir=${workspaceFolder}"
+    "--compile-commands-dir=${workspaceFolder}",
+    "-Wno-c2y-extensions"
   ]
 }
