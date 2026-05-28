@@ -11,7 +11,7 @@ target_include_directories(wavecore
 
 target_compile_features(wavecore
     PUBLIC
-        cxx_std_20
+        cxx_std_23
 )
 
 wavecore_set_project_warnings(wavecore)

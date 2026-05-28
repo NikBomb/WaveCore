@@ -1,5 +1,6 @@
 #ifndef WAVECORE_IELEMENTUPDATER_HPP
 #define WAVECORE_IELEMENTUPDATER_HPP
+#include <cstddef>
 #include <span>
 
 namespace wavecore {
@@ -15,8 +16,9 @@ namespace wavecore {
         }
         
         template<typename Self>
-        void gather(this Self& self, std::span<typename Self::node_type>) noexcept {
-            self.gather_impl();
+        void gather(this Self& self, std::span<typename Self::node_type> nodes,
+                    std::span<const std::size_t, Self::nodes_per_element> connectivity) noexcept {
+            self.gather_impl(nodes, connectivity);
         }
         
         private:
@@ -30,7 +32,8 @@ namespace wavecore {
         }
         
         template<typename Self>
-        void gather_impl(std::span<typename Self::node_type>) {};
+        void gather_impl(std::span<const typename Self::node_type>, 
+                         std::span<const std::size_t, Self::nodes_per_element>) noexcept {};
 
     };
 }

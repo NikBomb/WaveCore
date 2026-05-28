@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <concepts>
 #include <span>
+#include <type_traits>
+#include <utility>
 #include "wavecore/mesh/Node.hpp"
 
 
@@ -19,7 +21,8 @@ namespace wavecore {
         requires std::same_as<typename ElementType::node_type, wavecore::Node<ElementType::dimension>>; 
     }  &&
     requires (ElementType elem) {    
-        {elem.gather(std::declval<std::span<typename ElementType::node_type>>())} -> std::same_as<void>;
+        {elem.gather( std::declval<std::span<typename ElementType::node_type>>(), 
+                      std::declval<std::span<std::size_t, ElementType::nodes_per_element>>())  } -> std::same_as<void>;
         
     } &&
     requires (ElementType const const_elem) {
