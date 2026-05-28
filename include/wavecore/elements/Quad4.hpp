@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <span>
+#include <cmath>
 
 #include "wavecore/elements/IElementUpdater.hpp"
 #include "wavecore/mesh/Node.hpp"
@@ -32,9 +33,11 @@ namespace wavecore {
         static constexpr size_t dimension = 2;
         static constexpr size_t gauss_points = 1;
         static constexpr size_t nodes_per_element = 4;
-
+        static constexpr size_t num_edges = 4;
         private:
         std::array<node_type_ptr, 4> nodes_{nullptr,nullptr,nullptr,nullptr};
+        std::array<std::array<double, dimension>, nodes_per_element> coordinates_matrix_;
+
         friend struct IElementUpdater;
         
 
@@ -50,7 +53,6 @@ namespace wavecore {
 
                 Derivative Matrix = [dN1_dcsi dN2_dcsi DN3_dcsi DN4_dcsi;  .... ]
             */
-            std::array<std::array<double, dimension>, nodes_per_element> coordinates_matrix;
             std::array<std::array<double, nodes_per_element>, dimension>
                 derivative_matrix{{{{-0.25 * (1.0 - eta), 0.25 * (1.0 - eta),
                                      0.25 * (1.0 + eta), -0.25 * (1.0 + eta)}},
@@ -58,10 +60,7 @@ namespace wavecore {
                                      0.25 * (1.0 + csi), 0.25 * (1.0 - csi)}}}};
 
 
-            for (size_t inode = 0; inode < nodes_per_element; ++inode) {
-                coordinates_matrix[inode] = nodes_[inode] -> coordinates();
-            }
-
+            
             std::array<std::array<double, dimension>, dimension> jacobian_matrix;
 
             for (std::size_t iparent_dim = 0; iparent_dim < dimension;
@@ -72,7 +71,7 @@ namespace wavecore {
                      inode++) {
                   jacobian_matrix[iparent_dim][iphysical_dim] +=
                       derivative_matrix[iparent_dim][inode] *
-                      coordinates_matrix[inode][iphysical_dim];
+                      coordinates_matrix_[inode][iphysical_dim];
                 }
               }
             }
@@ -92,9 +91,27 @@ namespace wavecore {
                 nodes_[inode] = &nodes[local_connectivity[inode]];
             }
 
+            for (size_t inode = 0; inode < nodes_per_element; ++inode) {
+                coordinates_matrix_[inode] = nodes_[inode] -> coordinates();
+            }
+
+
         }
 
-
+        /* return characteristic length as minimum of 4 edges
+        1-2, 2-3, 3-4, 4-1 */
+        double characteristic_length_impl() const noexcept {
+        
+            double min_edge_length = 1e10;
+            for (size_t iedge = 0; iedge < num_edges; iedge++) {
+                double edge_length = std::sqrt(std::pow(coordinates_matrix_[iedge][0] - coordinates_matrix_[(iedge + 1) % nodes_per_element][0],2 ) +
+                                            std::pow(coordinates_matrix_[iedge][1] - coordinates_matrix_[(iedge + 1) % nodes_per_element][1],2 ));
+                if (edge_length < min_edge_length)
+                    min_edge_length = edge_length; 
+            }
+    
+            return min_edge_length;
+        }
 
     };
 }

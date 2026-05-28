@@ -125,3 +125,145 @@ TEST_CASE("Quad4 measure tests") {
         CHECK(element.measure() == doctest::Approx(6.0));
     }
 }
+
+TEST_CASE("Quad4 characteristic length tests") {
+    SUBCASE("unit square has characteristic length one") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{0.0, 0.0}},
+            wavecore::Node2D{{1.0, 0.0}},
+            wavecore::Node2D{{1.0, 1.0}},
+            wavecore::Node2D{{0.0, 1.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        CHECK(element.characteristic_length() == doctest::Approx(1.0));
+    }
+
+    SUBCASE("axis-aligned rectangle returns minimum edge length") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{0.0, 0.0}},
+            wavecore::Node2D{{2.0, 0.0}},
+            wavecore::Node2D{{2.0, 3.0}},
+            wavecore::Node2D{{0.0, 3.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        // Edge lengths: 2, 3, 2, 3
+        CHECK(element.characteristic_length() == doctest::Approx(2.0));
+    }
+
+    SUBCASE("translated rectangle returns minimum edge length") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{10.0, -4.0}},
+            wavecore::Node2D{{13.0, -4.0}},
+            wavecore::Node2D{{13.0,  1.0}},
+            wavecore::Node2D{{10.0,  1.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        // Edge lengths: 3, 5, 3, 5
+        CHECK(element.characteristic_length() == doctest::Approx(3.0));
+    }
+
+    SUBCASE("parallelogram returns minimum edge length") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{0.0, 0.0}},
+            wavecore::Node2D{{2.0, 0.0}},
+            wavecore::Node2D{{3.0, 1.0}},
+            wavecore::Node2D{{1.0, 1.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        // Edge lengths:
+        // 0-1 = 2
+        // 1-2 = sqrt(2)
+        // 2-3 = 2
+        // 3-0 = sqrt(2)
+        CHECK(element.characteristic_length() == doctest::Approx(std::sqrt(2.0)));
+    }
+
+    SUBCASE("distorted convex quadrilateral returns minimum edge length") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{0.0, 0.0}},
+            wavecore::Node2D{{2.0, 0.0}},
+            wavecore::Node2D{{2.5, 1.0}},
+            wavecore::Node2D{{0.0, 1.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        // Edge lengths:
+        // 0-1 = 2
+        // 1-2 = sqrt(0.5^2 + 1^2) = sqrt(1.25)
+        // 2-3 = 2.5
+        // 3-0 = 1
+        CHECK(element.characteristic_length() == doctest::Approx(1.0));
+    }
+
+    SUBCASE("nontrivial connectivity returns minimum edge length") {
+        std::array<wavecore::Node2D, 8> nodes{
+            wavecore::Node2D{{100.0, 100.0}},
+            wavecore::Node2D{{0.0,   0.0}},
+            wavecore::Node2D{{42.0,  42.0}},
+            wavecore::Node2D{{2.0,   0.0}},
+            wavecore::Node2D{{-1.0, -1.0}},
+            wavecore::Node2D{{2.0,   3.0}},
+            wavecore::Node2D{{0.0,   3.0}},
+            wavecore::Node2D{{9.0,   9.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{1, 3, 5, 6};
+
+        element.gather(nodes, connectivity);
+
+        // Physical element:
+        // node 1 -> (0,0)
+        // node 3 -> (2,0)
+        // node 5 -> (2,3)
+        // node 6 -> (0,3)
+        //
+        // Edge lengths: 2, 3, 2, 3
+        CHECK(element.characteristic_length() == doctest::Approx(2.0));
+    }
+
+    SUBCASE("sliver-like quadrilateral returns very small edge length") {
+        std::array<wavecore::Node2D, 4> nodes{
+            wavecore::Node2D{{0.0, 0.0}},
+            wavecore::Node2D{{0.1, 0.0}},
+            wavecore::Node2D{{2.0, 1.0}},
+            wavecore::Node2D{{0.0, 1.0}}
+        };
+
+        wavecore::Quad4 element{};
+        std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+        element.gather(nodes, connectivity);
+
+        // Edge lengths:
+        // 0-1 = 0.1
+        // 1-2 = sqrt(1.9^2 + 1^2)
+        // 2-3 = 2
+        // 3-0 = 1
+        CHECK(element.characteristic_length() == doctest::Approx(0.1));
+    }
+}
