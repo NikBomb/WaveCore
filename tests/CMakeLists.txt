@@ -25,6 +25,10 @@ target_link_libraries(wavecore_tests
 
 )
 
+target_compile_options(wavecore_tests PRIVATE
+    -fconcepts-diagnostics-depth=3
+)
+
 wavecore_set_project_warnings(wavecore_tests)
 wavecore_enable_sanitizers(wavecore_tests)
 
