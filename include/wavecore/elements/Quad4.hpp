@@ -6,13 +6,13 @@
 #include <span>
 #include <cmath>
 
-#include "wavecore/elements/IElementUpdater.hpp"
+#include "wavecore/elements/IElement.hpp"
 #include "wavecore/mesh/Node.hpp"
 
 
 
 namespace wavecore {
-    class Quad4 : public IElementUpdater {
+    class Quad4 : public IElement {
         /*
             implementation of a Quad element with 4 nodes and one Gauss point in the center,
             Node numbering convention is: bottom left and counter-clockwise.
@@ -38,7 +38,7 @@ namespace wavecore {
         std::array<node_type_ptr, 4> nodes_{nullptr,nullptr,nullptr,nullptr};
         std::array<std::array<double, dimension>, nodes_per_element> coordinates_matrix_;
 
-        friend struct IElementUpdater;
+        friend struct IElement;
         
 
         /*
