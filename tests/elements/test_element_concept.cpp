@@ -126,7 +126,27 @@ TEST_CASE("Quad4 measure tests") {
     }
 }
 
-TEST_CASE("Quad4 characteristic length tests") {
+    TEST_CASE("Quad4 gather tests") {
+        SUBCASE("gather function correctly sets up element nodes") {
+            std::array<wavecore::Node2D, 4> nodes{
+                wavecore::Node2D{{0.0, 0.0}}, // node 0: bottom-left
+                wavecore::Node2D{{1.0, 0.0}}, // node 1: bottom-right
+                wavecore::Node2D{{1.0, 1.0}}, // node 2: top-right
+                wavecore::Node2D{{0.0, 1.0}}  // node 3: top-left
+            };
+
+            wavecore::Quad4 element{};
+            std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+
+            element.gather(nodes, connectivity);
+
+            // Verify that the element can compute its measure correctly after gathering nodes
+            // This indirectly tests that gather worked properly by checking measure calculation
+            CHECK(element.measure() == doctest::Approx(1.0));
+        }
+    }
+
+    TEST_CASE("Quad4 characteristic length tests") {
     SUBCASE("unit square has characteristic length one") {
         std::array<wavecore::Node2D, 4> nodes{
             wavecore::Node2D{{0.0, 0.0}},
