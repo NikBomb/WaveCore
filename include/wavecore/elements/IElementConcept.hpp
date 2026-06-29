@@ -91,9 +91,7 @@ concept IElementConcept =
       //  const_element.derivative_matrix(parent_coordinate)
      // } -> std::same_as<ElementParentDerivativeMatrix<ElementType>>;
 
-      //{
-      //  const_element.jacobian(parent_coordinate)
-      //} -> std::same_as<ElementMatrix<ElementType>>;
+       { const_element.jacobian_matrix(parent_coordinate) } -> std::same_as<ElementMatrix<ElementType>>;
 
      // { const_element.det_jacobian(parent_coordinate) } -> std::same_as<double>;
 

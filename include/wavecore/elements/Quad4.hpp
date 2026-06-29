@@ -41,11 +41,14 @@ namespace wavecore {
         friend struct IElement;
         
 
-        /*
+/*
            Return the Jacobian matrix from parent domain to physical domain evaluated at csi, eta. (vectors are columns) 
         */
 
-        std::array<std::array<double, dimension>, dimension> jacobian(double csi = 0.0, double eta = 0.0) const noexcept {
+         std::array<std::array<double, dimension>, dimension> jacobian_matrix_impl(std::span<double, dimension> local_coordinates) const noexcept {
+            
+            double csi = local_coordinates[0];
+            double eta = local_coordinates[1];
             
             /* 
                 Coordinates matrix
@@ -80,8 +83,9 @@ namespace wavecore {
 
         
         [[nodiscard]] double measure_impl() const noexcept {
-            auto jacobian_matrix = jacobian();
-            double jacobian_determinant = jacobian_matrix[0][0] * jacobian_matrix[1][1] - jacobian_matrix[0][1] * jacobian_matrix[1][0];
+            auto coords = std::array<double, dimension>{0,0};
+            auto jacobian_mat = jacobian_matrix(coords);
+            double jacobian_determinant = jacobian_mat[0][0] * jacobian_mat[1][1] - jacobian_mat[0][1] * jacobian_mat[1][0];
             return 4 * jacobian_determinant;
         }
 
