@@ -81,12 +81,14 @@ namespace wavecore {
             return jacobian_matrix;
         }
 
+        [[nodiscard]] double jacobian_determinant_impl(std::span<double, dimension> local_coordinates) const noexcept {
+            auto jacobian_mat = jacobian_matrix_impl(local_coordinates);
+            return jacobian_mat[0][0] * jacobian_mat[1][1] - jacobian_mat[0][1] * jacobian_mat[1][0];
+        }
         
         [[nodiscard]] double measure_impl() const noexcept {
             auto coords = std::array<double, dimension>{0,0};
-            auto jacobian_mat = jacobian_matrix(coords);
-            double jacobian_determinant = jacobian_mat[0][0] * jacobian_mat[1][1] - jacobian_mat[0][1] * jacobian_mat[1][0];
-            return 4 * jacobian_determinant;
+            return 4 * jacobian_determinant_impl(coords);
         }
 
         void gather_impl(std::span<node_type> nodes, 

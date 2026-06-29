@@ -17,6 +17,7 @@ target_sources(wavecore_tests
         mesh/test_nodes.cpp
         elements/test_element_concept.cpp
         elements/test_quad4_jacobian.cpp
+        elements/test_quad4_jacobian_determinant.cpp
 )
 
 target_link_libraries(wavecore_tests

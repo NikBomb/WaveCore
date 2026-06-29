@@ -22,25 +22,35 @@ namespace wavecore {
             self.gather_impl(nodes, connectivity);
         }
 
-         template<typename Self>
+template<typename Self>
          [[nodiscard]] std::array<std::array<double, Self::dimension>, Self::dimension> jacobian_matrix(this const Self& self, std::span<double, Self::dimension> local_c) noexcept {
-            return self.jacobian_matrix_impl(local_c);
-        }
-        
-        private:
+             return self.jacobian_matrix_impl(local_c);
+         }
+         
+template<typename Self>
+          [[nodiscard]] double jacobian_determinant(this const Self& self, std::span<double, Self::dimension> local_c) noexcept {
+              return self.jacobian_determinant_impl(local_c);
+          }
+          
+          private:
 
-        [[nodiscard]] double measure_impl() const noexcept {
-            return 0.0;
-        }
+         [[nodiscard]] double measure_impl() const noexcept {
+             return 0.0;
+         }
 
-        [[nodiscard]] double characteristic_length_impl() const noexcept {
-            return 0.0;
-        }
-        
-        template<typename Self>
-        [[nodiscard]] std::array<std::array<double, Self::dimension>, Self::dimension> jacobian_matrix(std::span<double, Self::dimension> local_c){
-            return std::array<std::array<double, Self::dimension>, Self::dimension>(0.0);
-        }
+         [[nodiscard]] double characteristic_length_impl() const noexcept {
+             return 0.0;
+         }
+         
+         template<typename Self>
+         [[nodiscard]] std::array<std::array<double, Self::dimension>, Self::dimension> jacobian_matrix(std::span<double, Self::dimension> /*local_c*/){
+             return std::array<std::array<double, Self::dimension>, Self::dimension>(0.0);
+         }
+
+         template<typename Self>
+         [[nodiscard]] double jacobian_determinant_impl(std::span<double, Self::dimension> /*local_c*/) noexcept {
+             return 0.0;
+         }
 
 
         template<typename Self>
