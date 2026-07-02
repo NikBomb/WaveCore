@@ -18,6 +18,7 @@ target_sources(wavecore_tests
         elements/test_element_concept.cpp
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
+        utils/test_matrix.cpp
 )
 
 target_link_libraries(wavecore_tests
@@ -27,9 +28,6 @@ target_link_libraries(wavecore_tests
 
 )
 
-target_compile_options(wavecore_tests PRIVATE
-    -fconcepts-diagnostics-depth=3
-)
 
 wavecore_set_project_warnings(wavecore_tests)
 wavecore_enable_sanitizers(wavecore_tests)
