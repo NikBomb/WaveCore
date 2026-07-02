@@ -5,7 +5,7 @@
 #include <cassert>
 #include <stdexcept>
 
-namespace WaveCore {
+namespace wavecore {
 
 /**
  * @brief A template matrix class for finite element computations
@@ -35,6 +35,34 @@ public:
 
     constexpr Matrix(const Matrix& other) : data_(other.data_) {}
 
+    // Constructor from initializer list
+    constexpr Matrix(std::initializer_list<std::initializer_list<T>> init) {
+        // Validate that the initializer list matches the matrix dimensions
+        assert(init.size() == Rows);
+        
+        size_t row = 0;
+        for (const auto& row_init : init) {
+            assert(row_init.size() == Cols);
+            size_t col = 0;
+            for (const auto& value : row_init) {
+                data_[row][col] = value;
+                ++col;
+            }
+            ++row;
+        }
+    }
+
+    // Constructor from flat initializer list for vectors (when Cols == 1)
+    constexpr Matrix(std::initializer_list<T> init) requires (Cols == 1) {
+        assert(init.size() == Rows);
+        
+        size_t i = 0;
+        for (const auto& value : init) {
+            data_[i][0] = value;
+            ++i;
+        }
+    }
+
     // Assignment operator
     constexpr Matrix& operator=(const Matrix& other) {
         if (this != &other) {
@@ -52,6 +80,19 @@ public:
     constexpr const T& operator()(size_t row, size_t col) const {
         assert(row < Rows && col < Cols);
         return data_[row][col];
+    }
+    
+    // Single-index accessor for vectors (1 column)
+    constexpr T& operator()(size_t row) {
+        static_assert(Cols == 1, "Single index available only for vectors");
+        assert(row < Rows);
+        return data_[row][0];
+    }
+
+    constexpr const T& operator()(size_t row) const {
+        static_assert(Cols == 1, "Single index available only for vectors");
+        assert(row < Rows);
+        return data_[row][0];
     }
 
     // Basic arithmetic operations
@@ -219,7 +260,7 @@ constexpr Matrix<T, N, N> inverse(const Matrix<T, N, N>& matrix) {
  * @tparam N Number of rows (elements in the vector)
  */
 template<typename T, size_t N>
-using Vector = WaveCore::Matrix<T, N, 1>;
+using Vector = wavecore::Matrix<T, N, 1>;
 
 } // namespace WaveCore
 

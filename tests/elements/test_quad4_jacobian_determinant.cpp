@@ -1,5 +1,6 @@
 #include "wavecore/elements/Quad4.hpp"
 #include "wavecore/mesh/Node.hpp"
+#include "wavecore/utils/Matrix.hpp"
 #include <doctest/doctest.h>
 
 TEST_CASE("Quad4 Jacobian Determinant") {
@@ -21,7 +22,7 @@ TEST_CASE("Quad4 Jacobian Determinant") {
     quad4.gather(nodes, connectivity);
 
     // Test jacobian determinant at center (0,0)
-    auto coords = std::array<double, 2>{0.0, 0.0};
+    auto coords = wavecore::Vector<double, 2>();
     double det = quad4.jacobian_determinant(coords);
 
     // For a unit square, the Jacobian determinant should be 1.0
@@ -46,7 +47,7 @@ TEST_CASE("Quad4 Jacobian Determinant") {
     quad4.gather(nodes, connectivity);
 
     // Test jacobian determinant at center (0,0)
-    auto coords = std::array<double, 2>{0.0, 0.0};
+    auto coords = wavecore::Vector<double, 2>();
     double det = quad4.jacobian_determinant(coords);
 
     // For a rectangle with width 2 and height 1, the Jacobian determinant

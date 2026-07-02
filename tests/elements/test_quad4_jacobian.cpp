@@ -1,5 +1,6 @@
 #include "wavecore/elements/Quad4.hpp"
 #include "wavecore/mesh/Node.hpp"
+#include "wavecore/utils/Matrix.hpp"
 
 #include <doctest/doctest.h>
 
@@ -22,7 +23,7 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         element.gather(nodes, connectivity);
 
         // Test at the center point (0,0) - this is where the Gauss point is located
-        std::array<double, 2> local_coords{{0.0, 0.0}};
+        wavecore::Vector<double, 2> local_coords;
         auto jacobian = element.jacobian_matrix(local_coords);
 
         // For a unit square, we need to compute the actual Jacobian matrix
@@ -54,10 +55,10 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         // So the Jacobian should be:
         // [0.5, 0]
         // [0, 0.5]
-        CHECK(jacobian[0][0] == doctest::Approx(0.5));
-        CHECK(jacobian[0][1] == doctest::Approx(0.0));
-        CHECK(jacobian[1][0] == doctest::Approx(0.0));
-        CHECK(jacobian[1][1] == doctest::Approx(0.5));
+        CHECK(jacobian(0,0) == doctest::Approx(0.5));
+        CHECK(jacobian(0,1) == doctest::Approx(0.0));
+        CHECK(jacobian(1,0) == doctest::Approx(0.0));
+        CHECK(jacobian(1,1) == doctest::Approx(0.5));
     }
 
     SUBCASE("Scaled square jacobian matrix") {
@@ -76,7 +77,7 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         element.gather(nodes, connectivity);
 
         // Test at the center point (0,0)
-        std::array<double, 2> local_coords{{0.0, 0.0}};
+        wavecore::Vector<double, 2> local_coords;
         auto jacobian = element.jacobian_matrix(local_coords);
 
         // For this rectangle, we need to compute the actual Jacobian matrix
@@ -108,10 +109,10 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         // So the Jacobian should be:
         // [1, 0]
         // [0, 1.5]
-        CHECK(jacobian[0][0] == doctest::Approx(1.0));
-        CHECK(jacobian[0][1] == doctest::Approx(0.0));
-        CHECK(jacobian[1][0] == doctest::Approx(0.0));
-        CHECK(jacobian[1][1] == doctest::Approx(1.5));
+        CHECK(jacobian(0,0) == doctest::Approx(1.0));
+        CHECK(jacobian(0,1) == doctest::Approx(0.0));
+        CHECK(jacobian(1,0) == doctest::Approx(0.0));
+        CHECK(jacobian(1,1) == doctest::Approx(1.5));
     }
 
     SUBCASE("Parallelogram jacobian matrix") {
@@ -130,7 +131,7 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         element.gather(nodes, connectivity);
 
         // Test at the center point (0,0)
-        std::array<double, 2> local_coords{{0.0, 0.0}};
+        wavecore::Vector<double, 2> local_coords;
         auto jacobian = element.jacobian_matrix(local_coords);
 
          // For this parallelogram, we need to compute the Jacobian matrix manually
@@ -162,10 +163,10 @@ TEST_CASE("Quad4 jacobian matrix tests") {
          // So the Jacobian should be:
          // [1, 0]
          // [0.5, 0.5]
-         CHECK(jacobian[0][0] == doctest::Approx(1.0));
-         CHECK(jacobian[0][1] == doctest::Approx(0.0));
-         CHECK(jacobian[1][0] == doctest::Approx(0.5));
-         CHECK(jacobian[1][1] == doctest::Approx(0.5));
+         CHECK(jacobian(0,0) == doctest::Approx(1.0));
+         CHECK(jacobian(0,1) == doctest::Approx(0.0));
+         CHECK(jacobian(1,0) == doctest::Approx(0.5));
+         CHECK(jacobian(1,1) == doctest::Approx(0.5));
     }
 
     SUBCASE("Jacobian determinant calculation") {
@@ -183,11 +184,11 @@ TEST_CASE("Quad4 jacobian matrix tests") {
         element.gather(nodes, connectivity);
 
         // Test at the center point (0,0)
-        std::array<double, 2> local_coords{{0.0, 0.0}};
+        wavecore::Vector<double, 2> local_coords;
         auto jacobian = element.jacobian_matrix(local_coords);
         
          // Determinant of unit square Jacobian matrix should be 1
-         double det = jacobian[0][0] * jacobian[1][1] - jacobian[0][1] * jacobian[1][0];
+         double det = wavecore::determinant(jacobian);
          // For our calculated Jacobian [0.5, 0; 0, 0.5], determinant = 0.5 * 0.5 - 0 * 0 = 0.25
          CHECK(det == doctest::Approx(0.25));
     }

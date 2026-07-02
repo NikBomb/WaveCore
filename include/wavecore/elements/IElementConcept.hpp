@@ -1,11 +1,12 @@
-#ifndef WAVECORE_ELEMENT_TRAITS_HPP
-#define WAVECORE_ELEMENT_TRAITS_HPP
+#ifndef wavecore_ELEMENT_TRAITS_HPP
+#define wavecore_ELEMENT_TRAITS_HPP
 
 #include <array>
 #include <cstddef>
 #include <concepts>
 #include <span>
 #include "wavecore/mesh/Node.hpp"
+#include "wavecore/utils/Matrix.hpp"
 
 
 
@@ -13,10 +14,10 @@
 namespace wavecore {
 
 template<class ElementType>
-using ElementVector = std::array<double, ElementType::dimension>;
+using ElementVector = wavecore::Vector<double, ElementType::dimension>;
 
 template< class ElementType>
-using ElementMatrix = std::array<ElementVector<ElementType>, ElementType::dimension>; 
+using ElementMatrix = wavecore::Matrix<double, ElementType::dimension, ElementType::dimension>; 
 
 template<class ElementType>
 using ElementParentCoordinate = ElementVector<ElementType>;
@@ -35,10 +36,7 @@ using ElementCoordinatematrix = ElementMatrix<ElementType>;
 
 template <class ElementType>
 using ElementParentDerivativeMatrix =
-    std::array<
-        std::array<double, ElementType::nodes_per_element>,
-        ElementType::dimension
-    >;
+    wavecore::Matrix<double, ElementType::dimension, ElementType::nodes_per_element>;
 
 
 template <class ElementType>
@@ -69,7 +67,7 @@ concept IElementConcept =
     } && requires(ElementType element, const ElementType const_element,
                   NodeSpan<ElementType> nodes,
                   ElementConnectivity<ElementType> connectivity,
-                  ElementParentCoordinate<ElementType> parent_coordinate,
+                  const ElementParentCoordinate<ElementType>& parent_coordinate,
                   ElementLocalVector<ElementType> local_force) {
       // -------------------------------------------------------------------------
       // Mutating operations

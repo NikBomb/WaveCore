@@ -1,5 +1,5 @@
-#ifndef WAVECORE_QUAD4_HPP
-#define WAVECORE_QUAD4_HPP
+#ifndef wavecore_QUAD4_HPP
+#define wavecore_QUAD4_HPP
 
 #include <array>
 #include <cstddef>
@@ -8,6 +8,7 @@
 
 #include "wavecore/elements/IElement.hpp"
 #include "wavecore/mesh/Node.hpp"
+#include "wavecore/utils/Matrix.hpp"
 
 
 
@@ -39,16 +40,15 @@ namespace wavecore {
         std::array<std::array<double, dimension>, nodes_per_element> coordinates_matrix_;
 
         friend struct IElement;
-        
 
 /*
            Return the Jacobian matrix from parent domain to physical domain evaluated at csi, eta. (vectors are columns) 
         */
 
-         std::array<std::array<double, dimension>, dimension> jacobian_matrix_impl(std::span<double, dimension> local_coordinates) const noexcept {
+         wavecore::Matrix<double, dimension, dimension> jacobian_matrix_impl(const wavecore::Vector<double, dimension>& local_coordinates) const noexcept {
             
-            double csi = local_coordinates[0];
-            double eta = local_coordinates[1];
+            double csi = local_coordinates(0);
+            double eta = local_coordinates(1);
             
             /* 
                 Coordinates matrix
@@ -56,15 +56,17 @@ namespace wavecore {
 
                 Derivative Matrix = [dN1_dcsi dN2_dcsi DN3_dcsi DN4_dcsi;  .... ]
             */
-            std::array<std::array<double, nodes_per_element>, dimension>
-                derivative_matrix{{{{-0.25 * (1.0 - eta), 0.25 * (1.0 - eta),
-                                     0.25 * (1.0 + eta), -0.25 * (1.0 + eta)}},
-                                   {{-0.25 * (1.0 - csi), -0.25 * (1.0 + csi),
-                                     0.25 * (1.0 + csi), 0.25 * (1.0 - csi)}}}};
+            wavecore::Matrix<double, nodes_per_element, dimension> derivative_matrix;
+            derivative_matrix(0, 0) = -0.25 * (1.0 - eta);
+            derivative_matrix(1, 0) =  0.25 * (1.0 - eta);
+            derivative_matrix(2, 0) =  0.25 * (1.0 + eta);
+            derivative_matrix(3, 0) = -0.25 * (1.0 + eta);
+            derivative_matrix(0, 1) = -0.25 * (1.0 - csi);
+            derivative_matrix(1, 1) = -0.25 * (1.0 + csi);
+            derivative_matrix(2, 1) =  0.25 * (1.0 + csi);
+            derivative_matrix(3, 1) =  0.25 * (1.0 - csi);
 
-
-            
-            std::array<std::array<double, dimension>, dimension> jacobian_matrix;
+            wavecore::Matrix<double, dimension, dimension> jacobian_matrix;
 
             for (std::size_t iparent_dim = 0; iparent_dim < dimension;
                  iparent_dim++) {
@@ -72,8 +74,8 @@ namespace wavecore {
                    iphysical_dim++) {
                 for (std::size_t inode = 0; inode < nodes_per_element;
                      inode++) {
-                  jacobian_matrix[iparent_dim][iphysical_dim] +=
-                      derivative_matrix[iparent_dim][inode] *
+                  jacobian_matrix(iparent_dim, iphysical_dim) +=
+                      derivative_matrix(inode, iparent_dim) *
                       coordinates_matrix_[inode][iphysical_dim];
                 }
               }
@@ -81,13 +83,13 @@ namespace wavecore {
             return jacobian_matrix;
         }
 
-        [[nodiscard]] double jacobian_determinant_impl(std::span<double, dimension> local_coordinates) const noexcept {
+        [[nodiscard]] double jacobian_determinant_impl(wavecore::Vector<double, dimension> local_coordinates) const noexcept {
             auto jacobian_mat = jacobian_matrix_impl(local_coordinates);
-            return jacobian_mat[0][0] * jacobian_mat[1][1] - jacobian_mat[0][1] * jacobian_mat[1][0];
+            return wavecore::determinant(jacobian_mat);
         }
         
         [[nodiscard]] double measure_impl() const noexcept {
-            auto coords = std::array<double, dimension>{0,0};
+            auto coords = wavecore::Vector<double, 2>({0,0});
             return 4 * jacobian_determinant_impl(coords);
         }
 

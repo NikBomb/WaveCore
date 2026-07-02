@@ -1,7 +1,8 @@
-#ifndef WAVECORE_IELEMENT_HPP
-#define WAVECORE_IELEMENT_HPP
+#ifndef wavecore_IELEMENT_HPP
+#define wavecore_IELEMENT_HPP
 #include <cstddef>
 #include <span>
+#include "wavecore/utils/Matrix.hpp"
 
 namespace wavecore {
     struct IElement {
@@ -22,13 +23,13 @@ namespace wavecore {
             self.gather_impl(nodes, connectivity);
         }
 
-template<typename Self>
-         [[nodiscard]] std::array<std::array<double, Self::dimension>, Self::dimension> jacobian_matrix(this const Self& self, std::span<double, Self::dimension> local_c) noexcept {
-             return self.jacobian_matrix_impl(local_c);
+        template<typename Self>
+         [[nodiscard]] wavecore::Matrix<double, Self::dimension, Self::dimension> jacobian_matrix(this const Self& self, const wavecore::Vector<double, Self::dimension>& local_c) noexcept {
+            return self.jacobian_matrix_impl(local_c);
          }
          
-template<typename Self>
-          [[nodiscard]] double jacobian_determinant(this const Self& self, std::span<double, Self::dimension> local_c) noexcept {
+          template<typename Self>
+          [[nodiscard]] double jacobian_determinant(this const Self& self, const wavecore::Vector<double, Self::dimension>& local_c) noexcept {
               return self.jacobian_determinant_impl(local_c);
           }
           
@@ -42,13 +43,13 @@ template<typename Self>
              return 0.0;
          }
          
-         template<typename Self>
-         [[nodiscard]] std::array<std::array<double, Self::dimension>, Self::dimension> jacobian_matrix(std::span<double, Self::dimension> /*local_c*/){
-             return std::array<std::array<double, Self::dimension>, Self::dimension>(0.0);
-         }
+        template<typename Self>
+          [[nodiscard]] wavecore::Matrix<double, Self::dimension, Self::dimension> jacobian_matrix_impl(const wavecore::Vector<double, Self::dimension>& /*local_c*/){
+              return wavecore::Matrix<double, Self::dimension, Self::dimension>();
+          }
 
          template<typename Self>
-         [[nodiscard]] double jacobian_determinant_impl(std::span<double, Self::dimension> /*local_c*/) noexcept {
+         [[nodiscard]] double jacobian_determinant_impl(const wavecore::Vector<double, Self::dimension>&/*local_c*/) noexcept {
              return 0.0;
          }
 

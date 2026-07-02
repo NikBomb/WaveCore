@@ -19,6 +19,7 @@ target_sources(wavecore_tests
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
         utils/test_matrix.cpp
+        utils/test_vector_accessor.cpp
 )
 
 target_link_libraries(wavecore_tests

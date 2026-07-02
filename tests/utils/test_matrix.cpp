@@ -3,7 +3,7 @@
 
 TEST_CASE("Matrix construction and initialization") {
     SUBCASE("Default constructor creates zero matrix") {
-        WaveCore::Matrix<double, 3, 4> matrix;
+        wavecore::Matrix<double, 3, 4> matrix;
         
         for (size_t i = 0; i < 3; ++i) {
             for (size_t j = 0; j < 4; ++j) {
@@ -13,12 +13,12 @@ TEST_CASE("Matrix construction and initialization") {
     }
 
     SUBCASE("Copy constructor works correctly") {
-        WaveCore::Matrix<double, 2, 3> original;
+        wavecore::Matrix<double, 2, 3> original;
         original(0, 0) = 1.0;
         original(0, 1) = 2.0;
         original(1, 2) = 3.0;
 
-        WaveCore::Matrix<double, 2, 3> copy(original);
+        wavecore::Matrix<double, 2, 3> copy(original);
         
         CHECK_EQ(copy(0, 0), 1.0);
         CHECK_EQ(copy(0, 1), 2.0);
@@ -26,11 +26,11 @@ TEST_CASE("Matrix construction and initialization") {
     }
 
     SUBCASE("Assignment operator works correctly") {
-        WaveCore::Matrix<double, 2, 3> original;
+        wavecore::Matrix<double, 2, 3> original;
         original(0, 0) = 5.0;
         original(1, 1) = 7.0;
 
-        WaveCore::Matrix<double, 2, 3> assigned;
+        wavecore::Matrix<double, 2, 3> assigned;
         assigned = original;
         
         CHECK_EQ(assigned(0, 0), 5.0);
@@ -39,7 +39,7 @@ TEST_CASE("Matrix construction and initialization") {
 }
 
 TEST_CASE("Matrix element access") {
-    WaveCore::Matrix<double, 2, 2> matrix;
+    wavecore::Matrix<double, 2, 2> matrix;
     matrix(0, 0) = 1.0;
     matrix(0, 1) = 2.0;
     matrix(1, 0) = 3.0;
@@ -68,11 +68,11 @@ TEST_CASE("Matrix element access") {
 }
 
 TEST_CASE("Matrix arithmetic operations") {
-    WaveCore::Matrix<double, 2, 2> a;
+    wavecore::Matrix<double, 2, 2> a;
     a(0, 0) = 1.0; a(0, 1) = 2.0;
     a(1, 0) = 3.0; a(1, 1) = 4.0;
 
-    WaveCore::Matrix<double, 2, 2> b;
+    wavecore::Matrix<double, 2, 2> b;
     b(0, 0) = 5.0; b(0, 1) = 6.0;
     b(1, 0) = 7.0; b(1, 1) = 8.0;
 
@@ -121,7 +121,7 @@ TEST_CASE("Matrix arithmetic operations") {
 }
 
 TEST_CASE("Matrix transpose operation") {
-    WaveCore::Matrix<double, 2, 3> matrix;
+    wavecore::Matrix<double, 2, 3> matrix;
     matrix(0, 0) = 1.0; matrix(0, 1) = 2.0; matrix(0, 2) = 3.0;
     matrix(1, 0) = 4.0; matrix(1, 1) = 5.0; matrix(1, 2) = 6.0;
 
@@ -137,42 +137,42 @@ TEST_CASE("Matrix transpose operation") {
 
 TEST_CASE("Square matrix determinant") {
     SUBCASE("2x2 matrix determinant") {
-        WaveCore::Matrix<double, 2, 2> matrix;
+        wavecore::Matrix<double, 2, 2> matrix;
         matrix(0, 0) = 1.0; matrix(0, 1) = 2.0;
         matrix(1, 0) = 3.0; matrix(1, 1) = 4.0;
 
-        auto det = WaveCore::determinant(matrix);
+        auto det = wavecore::determinant(matrix);
         CHECK_EQ(det, -2.0); // 1*4 - 2*3 = 4 - 6 = -2
     }
 
     SUBCASE("3x3 matrix determinant") {
-        WaveCore::Matrix<double, 3, 3> matrix;
+        wavecore::Matrix<double, 3, 3> matrix;
         matrix(0, 0) = 1.0; matrix(0, 1) = 2.0; matrix(0, 2) = 3.0;
         matrix(1, 0) = 4.0; matrix(1, 1) = 5.0; matrix(1, 2) = 6.0;
         matrix(2, 0) = 7.0; matrix(2, 1) = 8.0; matrix(2, 2) = 9.0;
 
-        auto det = WaveCore::determinant(matrix);
+        auto det = wavecore::determinant(matrix);
         CHECK_EQ(det, 0.0); // This is a singular matrix (rows are linearly dependent)
     }
 
     SUBCASE("3x3 matrix determinant with non-zero value") {
-        WaveCore::Matrix<double, 3, 3> matrix;
+        wavecore::Matrix<double, 3, 3> matrix;
         matrix(0, 0) = 1.0; matrix(0, 1) = 2.0; matrix(0, 2) = 3.0;
         matrix(1, 0) = 0.0; matrix(1, 1) = 1.0; matrix(1, 2) = 4.0;
         matrix(2, 0) = 5.0; matrix(2, 1) = 6.0; matrix(2, 2) = 0.0;
 
-        auto det = WaveCore::determinant(matrix);
+        auto det = wavecore::determinant(matrix);
         CHECK_EQ(det, 1.0); // Calculated manually: 1*(1*0-4*6) - 2*(0*0-4*5) + 3*(0*6-1*5) = -24 + 40 - 15 = 1
     }
 }
 
 TEST_CASE("Square matrix inverse") {
     SUBCASE("2x2 matrix inverse") {
-        WaveCore::Matrix<double, 2, 2> matrix;
+        wavecore::Matrix<double, 2, 2> matrix;
         matrix(0, 0) = 2.0; matrix(0, 1) = 1.0;
         matrix(1, 0) = 1.0; matrix(1, 1) = 1.0;
 
-        auto inverse = WaveCore::inverse(matrix);
+        auto inverse = wavecore::inverse(matrix);
         
         // Check that A * A^(-1) = I
         auto identity = matrix * inverse;
@@ -183,12 +183,12 @@ TEST_CASE("Square matrix inverse") {
     }
 
     SUBCASE("3x3 matrix inverse") {
-        WaveCore::Matrix<double, 3, 3> matrix;
+        wavecore::Matrix<double, 3, 3> matrix;
         matrix(0, 0) = 2.0; matrix(0, 1) = 1.0; matrix(0, 2) = 1.0;
         matrix(1, 0) = 3.0; matrix(1, 1) = 2.0; matrix(1, 2) = 1.0;
         matrix(2, 0) = 2.0; matrix(2, 1) = 1.0; matrix(2, 2) = 2.0;
 
-        auto inverse = WaveCore::inverse(matrix);
+        auto inverse = wavecore::inverse(matrix);
         
         // Check that A * A^(-1) = I
         auto identity = matrix * inverse;
@@ -204,24 +204,24 @@ TEST_CASE("Square matrix inverse") {
     }
 
     SUBCASE("Singular matrix throws exception") {
-        WaveCore::Matrix<double, 2, 2> singular_matrix;
+        wavecore::Matrix<double, 2, 2> singular_matrix;
         singular_matrix(0, 0) = 1.0; singular_matrix(0, 1) = 2.0;
         singular_matrix(1, 0) = 2.0; singular_matrix(1, 1) = 4.0; // Dependent rows
 
-        CHECK_THROWS_AS(WaveCore::inverse(singular_matrix), std::runtime_error);
+        CHECK_THROWS_AS(wavecore::inverse(singular_matrix), std::runtime_error);
     }
 }
 
 TEST_CASE("Matrix equality operators") {
-    WaveCore::Matrix<double, 2, 2> a;
+    wavecore::Matrix<double, 2, 2> a;
     a(0, 0) = 1.0; a(0, 1) = 2.0;
     a(1, 0) = 3.0; a(1, 1) = 4.0;
 
-    WaveCore::Matrix<double, 2, 2> b;
+    wavecore::Matrix<double, 2, 2> b;
     b(0, 0) = 1.0; b(0, 1) = 2.0;
     b(1, 0) = 3.0; b(1, 1) = 4.0;
 
-    WaveCore::Matrix<double, 2, 2> c;
+    wavecore::Matrix<double, 2, 2> c;
     c(0, 0) = 1.0; c(0, 1) = 2.0;
     c(1, 0) = 3.0; c(1, 1) = 5.0;
 
@@ -237,7 +237,7 @@ TEST_CASE("Matrix equality operators") {
 }
 
 TEST_CASE("Matrix bounds checking") {
-    WaveCore::Matrix<double, 2, 2> matrix;
+    wavecore::Matrix<double, 2, 2> matrix;
     
     SUBCASE("Accessing valid indices works") {
         matrix(0, 0) = 1.0;
@@ -255,7 +255,7 @@ TEST_CASE("Matrix bounds checking") {
 TEST_CASE("Vector operations using Vector") {
     SUBCASE("Vector as Matrix with 1 column") {
         // Create a 3x1 matrix (vector) using Vector alias
-        WaveCore::Vector<double, 3> vector;
+        wavecore::Vector<double, 3> vector;
         vector(0, 0) = 1.0;
         vector(1, 0) = 2.0;
         vector(2, 0) = 3.0;
@@ -267,12 +267,12 @@ TEST_CASE("Vector operations using Vector") {
 
     SUBCASE("Matrix-vector multiplication") {
         // 2x2 matrix
-        WaveCore::Matrix<double, 2, 2> matrix;
+        wavecore::Matrix<double, 2, 2> matrix;
         matrix(0, 0) = 1.0; matrix(0, 1) = 2.0;
         matrix(1, 0) = 3.0; matrix(1, 1) = 4.0;
 
         // 2x1 vector using Vector alias
-        WaveCore::Vector<double, 2> vector;
+        wavecore::Vector<double, 2> vector;
         vector(0, 0) = 5.0;
         vector(1, 0) = 6.0;
 
