@@ -93,6 +93,8 @@ concept IElementConcept =
        
        { const_element.jacobian_determinant(parent_coordinate) } -> std::same_as<double>;
 
+       {const_element.strain_rate_tensor(parent_coordinate)} -> std::same_as<Matrix<double, ElementType::dimension, ElementType::dimension>>; 
+
      // { const_element.det_jacobian(parent_coordinate) } -> std::same_as<double>;
 
       //{

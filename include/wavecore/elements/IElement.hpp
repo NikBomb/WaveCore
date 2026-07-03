@@ -33,6 +33,11 @@ namespace wavecore {
               return self.jacobian_determinant_impl(local_c);
           }
           
+          template<typename Self>
+          [[nodiscard]] wavecore::Matrix<double, Self::dimension, Self::dimension> strain_rate_tensor(this const Self& self, const wavecore::Vector<double, Self::dimension>& local_c) noexcept {
+              return self.strain_rate_tensor_impl(local_c);
+          }
+
           private:
 
          [[nodiscard]] double measure_impl() const noexcept {
@@ -53,6 +58,10 @@ namespace wavecore {
              return 0.0;
          }
 
+          template<typename Self>
+          [[nodiscard]] wavecore::Matrix<double, Self::dimension, Self::dimension> strain_rate_tensor_impl(const wavecore::Vector<double, Self::dimension>& /*local_c*/) noexcept {
+              return wavecore::Matrix<double, Self::dimension, Self::dimension>();
+          }
 
         template<typename Self>
         void gather_impl(std::span<const typename Self::node_type>, 
