@@ -182,6 +182,21 @@ TEST_CASE("Square matrix inverse") {
         CHECK_EQ(identity(1, 1), 1.0);
     }
 
+    SUBCASE("2x2 matrix inverse with float type") {
+        wavecore::Matrix<float, 2, 2> matrix;
+        matrix(0, 0) = 2.0f; matrix(0, 1) = 1.0f;
+        matrix(1, 0) = 1.0f; matrix(1, 1) = 1.0f;
+
+        auto inverse = wavecore::inverse(matrix);
+        
+        // Check that A * A^(-1) = I
+        auto identity = matrix * inverse;
+        CHECK_EQ(identity(0, 0), 1.0f);
+        CHECK_EQ(identity(0, 1), 0.0f);
+        CHECK_EQ(identity(1, 0), 0.0f);
+        CHECK_EQ(identity(1, 1), 1.0f);
+    }
+
     SUBCASE("3x3 matrix inverse") {
         wavecore::Matrix<double, 3, 3> matrix;
         matrix(0, 0) = 2.0; matrix(0, 1) = 1.0; matrix(0, 2) = 1.0;
@@ -201,6 +216,47 @@ TEST_CASE("Square matrix inverse") {
         CHECK_EQ(identity(2, 0), 0.0);
         CHECK_EQ(identity(2, 1), 0.0);
         CHECK_EQ(identity(2, 2), 1.0);
+    }
+
+    SUBCASE("3x3 matrix inverse with float type") {
+        wavecore::Matrix<float, 3, 3> matrix;
+        matrix(0, 0) = 2.0f; matrix(0, 1) = 1.0f; matrix(0, 2) = 1.0f;
+        matrix(1, 0) = 3.0f; matrix(1, 1) = 2.0f; matrix(1, 2) = 1.0f;
+        matrix(2, 0) = 2.0f; matrix(2, 1) = 1.0f; matrix(2, 2) = 2.0f;
+
+        auto inverse = wavecore::inverse(matrix);
+        
+        // Check that A * A^(-1) = I
+        auto identity = matrix * inverse;
+        CHECK_EQ(identity(0, 0), 1.0f);
+        CHECK_EQ(identity(0, 1), 0.0f);
+        CHECK_EQ(identity(0, 2), 0.0f);
+        CHECK_EQ(identity(1, 0), 0.0f);
+        CHECK_EQ(identity(1, 1), 1.0f);
+        CHECK_EQ(identity(1, 2), 0.0f);
+        CHECK_EQ(identity(2, 0), 0.0f);
+        CHECK_EQ(identity(2, 1), 0.0f);
+        CHECK_EQ(identity(2, 2), 1.0f);
+    }
+
+    SUBCASE("Identity matrix inverse") {
+        wavecore::Matrix<double, 3, 3> identity_matrix;
+        identity_matrix(0, 0) = 1.0; identity_matrix(0, 1) = 0.0; identity_matrix(0, 2) = 0.0;
+        identity_matrix(1, 0) = 0.0; identity_matrix(1, 1) = 1.0; identity_matrix(1, 2) = 0.0;
+        identity_matrix(2, 0) = 0.0; identity_matrix(2, 1) = 0.0; identity_matrix(2, 2) = 1.0;
+
+        auto inverse = wavecore::inverse(identity_matrix);
+        
+        // Identity matrix inverted should be itself
+        CHECK_EQ(inverse(0, 0), 1.0);
+        CHECK_EQ(inverse(0, 1), 0.0);
+        CHECK_EQ(inverse(0, 2), 0.0);
+        CHECK_EQ(inverse(1, 0), 0.0);
+        CHECK_EQ(inverse(1, 1), 1.0);
+        CHECK_EQ(inverse(1, 2), 0.0);
+        CHECK_EQ(inverse(2, 0), 0.0);
+        CHECK_EQ(inverse(2, 1), 0.0);
+        CHECK_EQ(inverse(2, 2), 1.0);
     }
 
     SUBCASE("Singular matrix throws exception") {

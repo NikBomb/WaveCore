@@ -252,6 +252,33 @@ constexpr Matrix<T, N, N> inverse(const Matrix<T, N, N>& matrix) {
 }
 
 /**
+ * @brief Returns the symmetric part of a square matrix
+ * 
+ * The symmetric part of a matrix A is defined as (A + A^T)/2 where A^T is the transpose of A.
+ * 
+ * @tparam T The numeric type
+ * @tparam N Size of the square matrix (must be 2 or 3)
+ * @param matrix Input square matrix
+ * @return Symmetric part of the matrix
+ */
+template<typename T, size_t N>
+constexpr Matrix<T, N, N> symmetric(const Matrix<T, N, N>& matrix) {
+    static_assert(N == 2 || N == 3, "Symmetric part is only implemented for 2x2 and 3x3 matrices");
+    
+    // Calculate the symmetric part: (A + A^T)/2
+    auto transposed = matrix.transpose();
+    Matrix<T, N, N> result;
+    
+    for (size_t i = 0; i < N; ++i) {
+        for (size_t j = 0; j < N; ++j) {
+            result(i, j) = (matrix(i, j) + transposed(i, j)) / T{2};
+        }
+    }
+    
+    return result;
+}
+
+/**
  * @brief Type alias for Vector as a specialization of Matrix with 1 column
  * 
  * This provides a convenient shorthand: Vector<T, N> instead of Matrix<T, N, 1>

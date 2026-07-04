@@ -39,6 +39,8 @@ namespace wavecore {
         private:
         std::array<node_type_ptr, 4> nodes_{nullptr,nullptr,nullptr,nullptr};
         wavecore::Matrix<double, nodes_per_element, dimension> coordinates_matrix_;
+        wavecore::Matrix<double, nodes_per_element, dimension> nodal_velocities_;
+
 
         friend struct IElement;
 
@@ -47,7 +49,7 @@ namespace wavecore {
         */
 
          wavecore::Matrix<double, dimension, dimension> jacobian_matrix_impl(const wavecore::Vector<double, dimension>& local_coordinates) const noexcept {
-            return derivatives_shape_functions_parent(local_coordinates) * coordinates_matrix_;
+            return derivatives_in_parent_domain(local_coordinates, coordinates_matrix_);
         }
 
         [[nodiscard]] double jacobian_determinant_impl(wavecore::Vector<double, dimension> local_coordinates) const noexcept {
@@ -70,6 +72,8 @@ namespace wavecore {
             for (size_t inode = 0; inode < nodes_per_element; ++inode) {
                 coordinates_matrix_( inode, 0) = nodes_[inode] -> coordinates()[0];
                 coordinates_matrix_(  inode, 1) = nodes_[inode] -> coordinates()[1];
+                nodal_velocities_(inode, 0) = nodes_[inode] -> velocity()[0];
+                nodal_velocities_(inode, 1) = nodes_[inode] -> velocity()[1];
             }
 
 
@@ -107,19 +111,13 @@ namespace wavecore {
         }
 
         
-        [[nodiscard]] wavecore::Matrix<double, dimension, dimension> derivatives_in_parent_domain(const wavecore::Vector<double, dimension>& /*local_c*/, wavecore::Matrix<double, nodes_per_element, dimension> /*field*/){
-
-            //auto shape_functions_der = derivatives_shape_functions_parent(local_c);
-            return wavecore::Matrix<double, dimension, dimension>();
-            
-            
+        [[nodiscard]] wavecore::Matrix<double, dimension, dimension> derivatives_in_parent_domain(const wavecore::Vector<double, dimension>& local_c, const wavecore::Matrix<double, nodes_per_element, dimension>& field) const noexcept {
+            return derivatives_shape_functions_parent(local_c) * field;            
         }
-        /* [[nodiscard]] wavecore::Matrix<double, dimension, dimension> velocity_derivative_parent_domain() const noexcept {
-
-        }*/
-        
-        wavecore::Matrix<double, dimension, dimension> strain_rate_tensor_impl(wavecore::Vector<double, dimension> /*local_coordinates*/){
-            return wavecore::Matrix<double, dimension, dimension>();
+            
+        wavecore::Matrix<double, dimension, dimension> strain_rate_tensor_impl(wavecore::Vector<double, dimension> /*local_coordinates*/) const {
+            auto strain_rate_tensor_parent = derivatives_in_parent_domain({0,0}, nodal_velocities_);
+            return wavecore::symmetric(wavecore::inverse(jacobian_matrix_impl({0,0})) * strain_rate_tensor_parent);
         }
 
 

@@ -18,7 +18,9 @@ target_sources(wavecore_tests
         elements/test_element_concept.cpp
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
+        elements/test_quad4_strain_rate_tensor.cpp
         utils/test_matrix.cpp
+        utils/test_matrix_symmetric.cpp
         utils/test_vector_accessor.cpp
 )
 

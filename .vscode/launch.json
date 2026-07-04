@@ -1,13 +1,11 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-           "name": "Python: Long Bar",
-           "type": "debugpy",
-           "request": "launch",
-           "program": "${workspaceRoot}/examples/longBar.py",
-           "console": "integratedTerminal",
-           "env": { "PYTHONPATH": "${workspaceRoot}"}
+        {  "type": "by-gdb",
+            "request": "launch",
+            "name": "Launch tests",
+            "program": "${workspaceRoot}/build/gcc14-debug/tests/wavecore_tests",
+            "cwd": "${workspaceRoot}"
         }
     ]
 }
