@@ -15,6 +15,8 @@ target_sources(wavecore_tests
         test_main.cpp
         mesh/test_structured_quad_mesh.cpp
         mesh/test_nodes.cpp
+        materials/test_material_concept.cpp
+        materials/test_linear_elastic_plane_strain.cpp
         elements/test_element_concept.cpp
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
