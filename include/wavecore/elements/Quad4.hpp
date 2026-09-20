@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "wavecore/elements/IElement.hpp"
+#include "wavecore/elements/PlaneElementProperties.hpp"
 #include "wavecore/mesh/Node.hpp"
 #include "wavecore/utils/Matrix.hpp"
 
@@ -29,6 +30,7 @@ namespace wavecore {
         public:
         
         using node_type = wavecore::Node2D;
+        using properties_type = PlaneElementProperties;
         using node_type_ptr = wavecore::Node2D*;
 
         static constexpr size_t dimension = 2;

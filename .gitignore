@@ -2,3 +2,13 @@
 __pycache__/
 build
 .cache
+
+# AI planning notes and agent instructions
+/next_step_material.md
+/status.md
+/Wavecore_manual.md
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.agents/**/*.md
+.codex/**/*.md

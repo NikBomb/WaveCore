@@ -18,6 +18,7 @@ target_sources(wavecore_tests
         materials/test_material_concept.cpp
         materials/test_linear_elastic_plane_strain.cpp
         elements/test_element_concept.cpp
+        elements/test_element_entry.cpp
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
         elements/test_quad4_strain_rate_tensor.cpp

@@ -62,6 +62,7 @@ concept IElementConcept =
           (ElementType::gauss_points > 0);
 
       typename ElementType::node_type;
+      typename ElementType::properties_type;
       requires std::same_as<typename ElementType::node_type,
                             wavecore::Node<ElementType::dimension>>;
     } && requires(ElementType element, const ElementType const_element,

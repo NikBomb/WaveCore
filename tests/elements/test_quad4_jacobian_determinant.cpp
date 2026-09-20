@@ -49,7 +49,6 @@ TEST_CASE("Quad4 Jacobian Determinant") {
     // Test jacobian determinant at center (0,0)
     auto coords = wavecore::Vector<double, 2>();
     double det = quad4.jacobian_determinant(coords);
-
     // For a rectangle with width 2 and height 1, the Jacobian determinant
     // should be 2.0
     CHECK_EQ(det, 0.5);
