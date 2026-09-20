@@ -15,10 +15,14 @@ target_sources(wavecore_tests
         test_main.cpp
         mesh/test_structured_quad_mesh.cpp
         mesh/test_nodes.cpp
+        mesh/test_scatter_force.cpp
         materials/test_material_concept.cpp
         materials/test_linear_elastic_plane_strain.cpp
         elements/test_element_concept.cpp
         elements/test_element_entry.cpp
+        elements/test_quad4_gather.cpp
+        elements/test_quad4_quadrature.cpp
+        elements/test_quad4_internal_force.cpp
         elements/test_quad4_jacobian.cpp
         elements/test_quad4_jacobian_determinant.cpp
         elements/test_quad4_strain_rate_tensor.cpp

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <limits>
 
 #include <doctest/doctest.h>
@@ -8,9 +9,18 @@
 
 namespace {
 
-// Storage-only fixture; does not implement a new quadrature formulation.
+// Storage-only fixture with a four-point rule; not a full element formulation.
 struct FourPointElement : wavecore::Quad4 {
     static constexpr std::size_t gauss_points = 4;
+
+private:
+    friend struct wavecore::IElement;
+    std::array<wavecore::QuadraturePoint<dimension>, gauss_points>
+    quadrature_impl() const noexcept {
+        const double a = 1.0 / std::sqrt(3.0);
+        return {{{{-a, -a}, 1.0}, {{a, -a}, 1.0},
+                 {{a, a}, 1.0}, {{-a, a}, 1.0}}};
+    }
 };
 
 template <std::size_t Dimension>

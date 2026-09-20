@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <concepts>
 #include <span>
+#include "wavecore/elements/QuadraturePoint.hpp"
 #include "wavecore/mesh/Node.hpp"
 #include "wavecore/utils/Matrix.hpp"
 
@@ -22,9 +23,17 @@ using ElementMatrix = wavecore::Matrix<double, ElementType::dimension, ElementTy
 template<class ElementType>
 using ElementParentCoordinate = ElementVector<ElementType>;
 
+template <class ElementType>
+using ElementQuadrature =
+    std::array<QuadraturePoint<ElementType::dimension>, ElementType::gauss_points>;
+
 template<class ElementType>
 using ElementLocalVector = 
     std::array<ElementVector<ElementType>, ElementType::nodes_per_element>;
+
+template <class ElementType>
+using ElementStressSpan =
+    std::span<const ElementMatrix<ElementType>, ElementType::gauss_points>;
 
 template <class ElementType>
 using ElementConnectivity = 
@@ -69,20 +78,24 @@ concept IElementConcept =
                   NodeSpan<ElementType> nodes,
                   ElementConnectivity<ElementType> connectivity,
                   const ElementParentCoordinate<ElementType>& parent_coordinate,
-                  ElementLocalVector<ElementType> local_force) {
+                  ElementStressSpan<ElementType> stresses,
+                  const typename ElementType::properties_type& properties) {
       // -------------------------------------------------------------------------
       // Mutating operations
       // -------------------------------------------------------------------------
 
       { element.gather(nodes, connectivity) } -> std::same_as<void>;
 
-      //{ element.scatter_force(local_force) } -> std::same_as<void>;
-
       // -------------------------------------------------------------------------
       // Const geometry operations
       // -------------------------------------------------------------------------
 
       { const_element.measure() } -> std::same_as<double>;
+
+      { const_element.quadrature() } -> std::same_as<ElementQuadrature<ElementType>>;
+
+      { const_element.internal_force(stresses, properties) }
+          -> std::same_as<ElementLocalVector<ElementType>>;
 
       { const_element.characteristic_length() } -> std::same_as<double>;
 

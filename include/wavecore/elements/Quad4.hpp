@@ -5,9 +5,11 @@
 #include <cstddef>
 #include <span>
 #include <cmath>
+#include <stdexcept>
 
 #include "wavecore/elements/IElement.hpp"
 #include "wavecore/elements/PlaneElementProperties.hpp"
+#include "wavecore/elements/QuadraturePoint.hpp"
 #include "wavecore/mesh/Node.hpp"
 #include "wavecore/utils/Matrix.hpp"
 
@@ -31,7 +33,6 @@ namespace wavecore {
         
         using node_type = wavecore::Node2D;
         using properties_type = PlaneElementProperties;
-        using node_type_ptr = wavecore::Node2D*;
 
         static constexpr size_t dimension = 2;
         static constexpr size_t gauss_points = 1;
@@ -39,12 +40,48 @@ namespace wavecore {
         static constexpr size_t num_edges = 4;
         
         private:
-        std::array<node_type_ptr, 4> nodes_{nullptr,nullptr,nullptr,nullptr};
         wavecore::Matrix<double, nodes_per_element, dimension> coordinates_matrix_;
         wavecore::Matrix<double, nodes_per_element, dimension> nodal_velocities_;
 
 
         friend struct IElement;
+
+        [[nodiscard]] constexpr std::array<QuadraturePoint<dimension>, gauss_points>
+        quadrature_impl() const noexcept {
+            // One-point integration on the parent square [-1, 1] x [-1, 1].
+            return {{{{0.0, 0.0}, 4.0}}};
+        }
+
+        [[nodiscard]] std::array<wavecore::Vector<double, dimension>, nodes_per_element>
+        internal_force_impl(
+            std::span<const wavecore::Matrix<double, dimension, dimension>, gauss_points> stresses,
+            const properties_type& properties) const {
+            std::array<wavecore::Vector<double, dimension>, nodes_per_element> forces{};
+            const auto points = quadrature_impl();
+            for (std::size_t gp = 0; gp < gauss_points; ++gp) {
+                const auto& point = points[gp];
+                const auto jacobian = jacobian_matrix_impl(point.coordinates);
+                const double det_j = wavecore::determinant(jacobian);
+                if (!std::isfinite(det_j) || det_j <= 0.0) {
+                    throw std::domain_error(
+                        "Quad4 internal force requires a finite positive Gauss-point Jacobian");
+                }
+
+                // Here J has parent directions in rows and physical directions
+                // in columns, so physical gradients are J^-1 * parent gradients.
+                const auto gradients = wavecore::inverse(jacobian)
+                                     * derivatives_shape_functions_parent(point.coordinates);
+                const auto stress_gradients = stresses[gp] * gradients;
+                const double integration_weight =
+                    point.weight * det_j * properties.thickness();
+                for (std::size_t node = 0; node < nodes_per_element; ++node) {
+                    for (std::size_t d = 0; d < dimension; ++d) {
+                        forces[node](d) += stress_gradients(d, node) * integration_weight;
+                    }
+                }
+            }
+            return forces;
+        }
 
 /*
            Return the Jacobian matrix from parent domain to physical domain evaluated at csi, eta. (vectors are columns) 
@@ -67,15 +104,12 @@ namespace wavecore {
         void gather_impl(std::span<node_type> nodes, 
                          std::span<const size_t, nodes_per_element> local_connectivity) noexcept 
         {
-            for (std::size_t inode = 0; inode < nodes_per_element; inode++) {
-                nodes_[inode] = &nodes[local_connectivity[inode]];
-            }
-
             for (size_t inode = 0; inode < nodes_per_element; ++inode) {
-                coordinates_matrix_( inode, 0) = nodes_[inode] -> coordinates()[0];
-                coordinates_matrix_(  inode, 1) = nodes_[inode] -> coordinates()[1];
-                nodal_velocities_(inode, 0) = nodes_[inode] -> velocity()[0];
-                nodal_velocities_(inode, 1) = nodes_[inode] -> velocity()[1];
+                const auto& node = nodes[local_connectivity[inode]];
+                for (std::size_t d = 0; d < dimension; ++d) {
+                    coordinates_matrix_(inode, d) = node.coordinates()[d];
+                    nodal_velocities_(inode, d) = node.velocity()[d];
+                }
             }
 
 

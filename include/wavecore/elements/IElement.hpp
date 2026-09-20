@@ -1,11 +1,34 @@
 #ifndef wavecore_IELEMENT_HPP
 #define wavecore_IELEMENT_HPP
+#include <array>
 #include <cstddef>
 #include <span>
 #include "wavecore/utils/Matrix.hpp"
 
 namespace wavecore {
     struct IElement {
+
+        // Point order must match the integration-point state order in an entry.
+        template <typename Self>
+        [[nodiscard]] constexpr auto quadrature(this const Self& self)
+            noexcept(noexcept(self.quadrature_impl()))
+            -> decltype(self.quadrature_impl()) {
+            return self.quadrature_impl();
+        }
+
+        // Stresses follow quadrature order. Returns positive internal forces
+        // in local node order; the solver uses external minus internal force.
+        // Requires gathered geometry and does not update material history.
+        template <typename Self>
+        [[nodiscard]] std::array<wavecore::Vector<double, Self::dimension>,
+                                Self::nodes_per_element>
+        internal_force(this const Self& self,
+                       std::span<const wavecore::Matrix<double, Self::dimension,
+                                                        Self::dimension>,
+                                 Self::gauss_points> stresses,
+                       const typename Self::properties_type& properties) {
+            return self.internal_force_impl(stresses, properties);
+        }
 
         template <typename Self>
         [[nodiscard]] double measure(this const Self& self) noexcept {
