@@ -37,125 +37,101 @@ The README describes an earlier 1D bar and ECS-style design. The implemented num
 
 ## Main data relationships
 
-```mermaid
-flowchart LR
-    Node["Node<br/>coordinates<br/>displacement<br/>velocity<br/>acceleration<br/>mass<br/>internal_force<br/>external_force"]
-    Quad4["Quad4<br/>coordinates_matrix_<br/>nodal_velocities_<br/>gather()<br/>strain_rate_tensor()<br/>internal_force()<br/>jacobian_matrix()"]
-    Material["LinearElasticPlaneStrain<br/>density_<br/>shear_modulus_<br/>lambda_<br/>initial_state()<br/>update()<br/>stress()"]
-    State["MaterialState<br/>stress<br/>stress_zz"]
-    Entry["ElementEntry<br/>element<br/>connectivity<br/>properties<br/>states[]"]
+The current and planned data relationships are represented using a UML class diagram. Composition shows ownership; the material-to-state dependency shows that the material defines and updates states without owning their instances.
 
-    Quad4 -->|reads through gather| Node
-    Entry -->|owns| Quad4
-    Entry -->|owns| State
-    Material -->|creates and updates| State
+```mermaid
+classDiagram
+    class MaterialElementBlock {
+        +material
+        +entries
+        +update_material
+        +assemble_internal_force
+    }
+    class Material {
+        +initial_state
+        +update
+        +stress
+    }
+    class ElementEntry {
+        +element
+        +connectivity
+        +properties
+        +geometry
+        +states
+    }
+    class Quad4 {
+        +quadrature
+        +refresh_geometry
+        +strain_rate
+        +internal_force
+    }
+    class GeometryState {
+        +physical_gradients
+        +jacobian_determinants
+    }
+    class MaterialState {
+        +stress
+        +stress_zz
+    }
+    class PlaneElementProperties {
+        +thickness
+    }
+
+    MaterialElementBlock *-- Material : one
+    MaterialElementBlock *-- ElementEntry : many
+    ElementEntry *-- Quad4 : element
+    ElementEntry *-- GeometryState : geometry
+    ElementEntry *-- MaterialState : per Gauss point
+    ElementEntry *-- PlaneElementProperties : properties
+    Material ..> MaterialState : initializes and updates
 ```
+
+The current implementation has not yet added the block or geometry state. The diagram describes the target ownership model; the implementation status is documented in the sections below.
 
 ## Nodes and mesh data
 
-[Node.hpp](/home/nico/Desktop/WaveCore/include/wavecore/mesh/Node.hpp) defines `Node<Dimension>`, restricted to dimensions 2 and 3. `Node2D` and `Node3D` are aliases.
+[Node.hpp](/home/nico/Desktop/WaveCore/include/wavecore/mesh/Node.hpp) defines `Node<Dimension>`, restricted to dimensions 2 and 3. Each node stores coordinates, displacement, velocity, acceleration, internal force, external force, and mass.
 
-Each node is an object containing fixed-size arrays for coordinates, displacement, velocity, acceleration, internal force, and external force. It also stores a scalar mass. Fields are zero-initialized, and mutable accessors expose displacement, velocity, acceleration, forces, and mass.
+There is no mesh aggregate currently implemented. Connectivity is supplied by callers as arrays or fixed-extent spans. [StructuredQuadMesh.cpp](/home/nico/Desktop/WaveCore/src/mesh/StructuredQuadMesh.cpp) is a source placeholder.
 
-There is no mesh aggregate or mesh ownership type currently implemented. Connectivity is supplied by callers as arrays or fixed-extent spans. [StructuredQuadMesh.cpp](/home/nico/Desktop/WaveCore/src/mesh/StructuredQuadMesh.cpp) is currently only a source placeholder and does not provide a structured mesh implementation.
-
-Coordinates and displacement are separate node fields, but no current code combines them. `Quad4` reads `coordinates()` directly.
+Coordinates and displacement are separate fields, and no current code combines them. `Quad4` reads `coordinates()` directly.
 
 ## Element interface and static polymorphism
 
-[IElement.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/IElement.hpp) provides common element operation names. It forwards calls to implementation functions on the concrete element using C++23 explicit object parameters.
+[IElement.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/IElement.hpp) provides common element operation names and forwards calls to concrete implementations using C++23 explicit object parameters. It exposes quadrature, gathering, Jacobian and determinant evaluation, strain-rate evaluation, measure, characteristic length, and internal-force integration.
 
-The interface exposes quadrature, gathering nodal data, Jacobian and determinant evaluation, strain-rate evaluation, measure, characteristic length, and internal-force integration from supplied stresses.
-
-There are no virtual functions in `IElement`. It is a forwarding base used with compile-time interfaces.
-
-[IElementConcept.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/IElementConcept.hpp) checks the concrete element’s static traits and operations. The concept requires a matching `Node<dimension>` type, a properties type, and dimensions/counts greater than zero. It currently permits dimensions 2 and 3.
+There are no virtual functions in `IElement`; it is a compile-time forwarding interface. [IElementConcept.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/IElementConcept.hpp) checks element traits and operations.
 
 ## Quad4
 
-[Quad4.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/Quad4.hpp) is the implemented concrete element. Its traits are:
+[Quad4.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/Quad4.hpp) is the implemented four-node quadrilateral. It is two-dimensional, has four nodes, one Gauss point, uses `Node2D`, and uses `PlaneElementProperties`.
 
-```text
-dimension          = 2
-nodes_per_element  = 4
-gauss_points       = 1
-node_type          = Node2D
-properties_type    = PlaneElementProperties
-```
-
-The element uses four-node parent-square shape functions. Nodes are ordered bottom-left, bottom-right, top-right, top-left.
-
-`Quad4` owns two cached matrices:
+The current implementation owns gathered coordinate and velocity matrices:
 
 ```text
 coordinates_matrix_
 nodal_velocities_
 ```
 
-`gather()` copies coordinates and velocities from supplied nodes using supplied connectivity. It does not retain node pointers. The cache remains unchanged until another gather operation.
+`gather()` copies coordinates and velocities from supplied nodes using connectivity. The current Jacobian, strain-rate, and internal-force operations use those gathered caches. The planned architecture moves persistent derived geometry into the entry geometry state.
 
-```mermaid
-sequenceDiagram
-    participant Caller
-    participant Nodes as Node2D span
-    participant Quad as Quad4
-
-    Caller->>Quad: gather(nodes, connectivity)
-    Quad->>Nodes: read coordinates()
-    Quad->>Nodes: read velocity()
-    Quad-->>Quad: cache local matrices
-    Caller->>Quad: jacobian / strain rate / force
-    Quad-->>Caller: compute from cached data
-```
-
-The Jacobian is formed by multiplying parent-domain shape-function derivatives by the cached coordinate matrix. Physical shape-function gradients are obtained by multiplying the inverse Jacobian by parent derivatives.
-
-The element has one Gauss point at parent coordinates `(0, 0)` with weight `4`, defined by `Quad4::quadrature_impl()`. [QuadraturePoint.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/QuadraturePoint.hpp) stores parent coordinates and the parent-domain weight.
-
-The strain-rate operation maps gathered nodal velocities through the inverse Jacobian and symmetrizes the result. The current `Quad4` implementation always evaluates this operation at the element center, even though the public operation accepts parent coordinates.
-
-The internal-force operation accepts one stress tensor per Gauss point and returns one local force vector per element node. It computes the Jacobian, rejects a nonfinite or nonpositive determinant, computes physical shape-function gradients, multiplies stress by those gradients, and scales by quadrature weight, determinant, and thickness. It does not update material state or nodal force storage.
+The element uses parent-square shape functions with nodes ordered bottom-left, bottom-right, top-right, top-left. The one Gauss point is at `(0, 0)` with weight `4`. Internal-force integration validates the Jacobian determinant, computes physical shape gradients, and scales by quadrature weight, determinant, and thickness.
 
 ## Element properties
 
-[PlaneElementProperties.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/PlaneElementProperties.hpp) currently stores only plane-element thickness. Construction rejects zero, negative, infinite, and NaN values.
-
-`Quad4::internal_force()` uses thickness as part of the integration scale:
-
-```text
-quadrature weight × Jacobian determinant × thickness
-```
+[PlaneElementProperties.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/PlaneElementProperties.hpp) stores validated positive plane-element thickness. Thickness belongs to element properties, not the material.
 
 ## Material interface and constitutive state
 
-[IMaterialConcept.hpp](/home/nico/Desktop/WaveCore/include/wavecore/materials/IMaterialConcept.hpp) defines the material contract. A material supplies a dimension, tensor type, state type, `initial_state()`, `update(state, strain_rate, dt)`, `density()`, and `stress(state)`.
+[IMaterialConcept.hpp](/home/nico/Desktop/WaveCore/include/wavecore/materials/IMaterialConcept.hpp) defines the material contract. A material supplies dimension, tensor type, state type, `initial_state()`, `update(state, strain_rate, dt)`, density, and stress evaluation.
 
-The material is passed as a const object during these operations. Mutable history is passed separately as `state`.
+[LinearElasticPlaneStrain.hpp](/home/nico/Desktop/WaveCore/include/wavecore/materials/LinearElasticPlaneStrain.hpp) implements two-dimensional isotropic small-strain plane-strain elasticity. Its state stores in-plane stress and `stress_zz`.
 
-[LinearElasticPlaneStrain.hpp](/home/nico/Desktop/WaveCore/include/wavecore/materials/LinearElasticPlaneStrain.hpp) implements two-dimensional isotropic small-strain plane-strain elasticity. Its material object stores density and derived Lamé parameters. Its state stores the in-plane stress tensor and `stress_zz`.
-
-```mermaid
-flowchart LR
-    Parameters[material parameters]
-    State[material state]
-    Rate[strain-rate tensor]
-    Dt[time step]
-    Update[material.update]
-    Stress[material.stress]
-
-    Parameters --> Update
-    State --> Update
-    Rate --> Update
-    Dt --> Update
-    Update --> State
-    State --> Stress
-```
-
-The tests verify that updates accumulate in one state without changing another state, and that invalid material parameters and time steps are rejected.
+The material object supplies constitutive parameters and behavior. It does not own integration-point history; states are passed to it for initialization and update.
 
 ## ElementEntry
 
-[ElementEntry.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/ElementEntry.hpp) binds one element type to one material type when their dimensions match. It owns:
+[ElementEntry.hpp](/home/nico/Desktop/WaveCore/include/wavecore/elements/ElementEntry.hpp) currently binds one element type to one material type and owns:
 
 ```text
 Element element
@@ -164,41 +140,56 @@ properties
 states[Element::gauss_points]
 ```
 
-The material is passed to the constructor by const reference but is not stored. The constructor calls `material.initial_state()` once for every integration point and stores the returned states.
+The constructor initializes every material state through `material.initial_state()`. States are independent and remain associated with their Gauss-point index.
 
-For the current `Quad4`, there is one material state per entry. The tests also define a four-point test element to verify that every integration point receives an independent state.
+The planned design adds one `Element::geometry_state_type` field to each entry. The entry will then bind one element instance to its connectivity, properties, geometry state, and material states.
 
-```mermaid
-flowchart TD
-    Material[material object]
-    Constructor[ElementEntry constructor]
-    Entry[ElementEntry]
-    State1[state at Gauss point 1]
-    StateN[state at Gauss point N]
+## Planned geometry state and responsibility boundaries
 
-    Material -->|initial state| Constructor
-    Constructor --> Entry
-    Entry --> State1
-    Entry --> StateN
+A concrete element type such as `Quad4` is a stateless formulation object. Its type defines dimension, node type, node count, Gauss points, properties type, geometry-state type, shape functions, and element-specific numerical operations. It computes geometry into caller-supplied state, evaluates strain rates from supplied geometry and velocities, and integrates supplied stresses into local forces.
+
+The architecture has two parallel formulation/state relationships:
+
+| Definition type | Per-entry or per-point state | Meaning |
+| --- | --- | --- |
+| `Element` | `Element::geometry_state_type` | The element defines how geometry is derived; each entry owns the resulting geometry state. |
+| `Material` | `Material::state_type` | The material defines constitutive behavior; each entry owns one state per Gauss point. |
+
+Geometry state is reconstructible derived data. Material state is persistent constitutive history. An `ElementEntry<Element, Material>` binds one element formulation to one geometry state and one material definition to an array of material states indexed by Gauss point.
+
+The later `MaterialElementBlock<Element, Material>` is the higher-level binding. It owns one material definition and many entries of the same element/material combination. The entry binds one element instance to its states; the block binds the shared material definition to the collection and coordinates operations.
+
+For `Quad4`, the planned geometry state contains physical shape-function gradients and Jacobian determinants per Gauss point. Jacobians or inverse Jacobians are stored only if later operations require them.
+
+The ownership relationship is:
+
+```text
+MaterialElementBlock
+├── one material definition
+├── many ElementEntry objects
+│   ├── element formulation
+│   ├── connectivity
+│   ├── element properties
+│   ├── geometry state
+│   └── material state per Gauss point
+└── ...
 ```
 
-The entry enforces only dimensional compatibility. It does not establish semantic compatibility between formulations that happen to have the same dimension.
+| Component | Responsibility |
+| --- | --- |
+| Concrete element | Define formulation mathematics and compute or consume supplied geometry state. |
+| ElementEntry | Keep one element associated with connectivity, properties, geometry, and material states. |
+| Material | Own constitutive parameters and define initialization, updates, and stress evaluation. |
+| Typed block | Own one material and many entries; control refresh, updates, assembly, and scattering. |
+| Solver or time integrator | Control nodal updates, staging, time increments, and operation timing. |
+
+The planned formulation is updated Lagrangian: geometry is rebuilt from the current nodal configuration whenever nodal positions change, normally at each time step or update stage before material evaluation. The current implementation reads `Node::coordinates()` directly and keeps displacement separate.
 
 ## Force scattering
 
-[ScatterForce.hpp](/home/nico/Desktop/WaveCore/include/wavecore/mesh/ScatterForce.hpp) contains the current mesh-level assembly utility. It receives a node span, a connectivity array, and local force vectors in element-node order.
+[ScatterForce.hpp](/home/nico/Desktop/WaveCore/include/wavecore/mesh/ScatterForce.hpp) contains the mesh-level assembly utility. It receives nodes, connectivity, and local force vectors, validates connectivity, and accumulates contributions into nodal internal forces without clearing them.
 
-It validates every connectivity index before modifying any node, then adds local forces into `Node::internal_force()`. Existing force values are preserved.
-
-```mermaid
-flowchart LR
-    ElementA[local forces from element A] --> Scatter[scatter_force]
-    ElementB[local forces from element B] --> Scatter
-    Connectivity[connectivity] --> Scatter
-    Scatter --> Shared[shared node internal_force]
-```
-
-The tests verify accumulation from two adjacent quadrilaterals sharing nodes. Force clearing is not implemented by this utility; callers are responsible for deciding when to clear nodal internal forces.
+Force clearing is a caller responsibility and should occur once before an assembly pass.
 
 ## What is currently connected
 
@@ -206,15 +197,14 @@ The implemented components can be used manually in this order:
 
 ```mermaid
 flowchart TD
-    Nodes[Node array]
-    Connectivity[connectivity]
-    Gather[Quad4.gather]
-    Rate[Quad4.strain_rate_tensor]
-    Material[material.update on entry states]
-    Stress[material.stress from entry states]
-    Local[Quad4.internal_force]
-    Scatter[scatter_force]
-
+    Nodes["Node array"]
+    Connectivity["connectivity"]
+    Gather["Quad4 gather"]
+    Rate["strain rate"]
+    Material["material update"]
+    Stress["stress"]
+    Local["local internal force"]
+    Scatter["scatter force"]
     Nodes --> Gather
     Connectivity --> Gather
     Gather --> Rate
@@ -226,7 +216,91 @@ flowchart TD
     Nodes --> Scatter
 ```
 
-No repository component currently performs this complete sequence. The application is not a solver, and there is no block or time-integrator type coordinating these calls.
+No repository component currently performs this complete sequence. The application is not yet a solver or time integrator.
+
+## Planned updated-Lagrangian UML views
+
+The planned architecture separates static ownership from runtime behavior. The class diagram shows which objects own other objects and data. The sequence diagram shows how the block coordinates geometry, kinematics, constitutive updates, force integration, and scattering.
+
+### Static ownership
+
+```mermaid
+classDiagram
+    class MaterialElementBlock {
+        +material
+        +entries
+    }
+    class ElementEntry {
+        +element
+        +connectivity
+        +properties
+        +geometry
+        +states
+    }
+    class Element {
+        +refresh_geometry
+        +strain_rate
+        +internal_force
+    }
+    class Material {
+        +update
+        +stress
+    }
+    class GeometryState {
+        +physical_gradients
+        +jacobian_determinants
+    }
+    class MaterialState {
+        +persistent_history
+    }
+
+    MaterialElementBlock *-- Material : one
+    MaterialElementBlock *-- ElementEntry : many
+    ElementEntry *-- Element : one
+    ElementEntry *-- GeometryState : one
+    ElementEntry *-- MaterialState : per Gauss point
+    Material ..> MaterialState : updates
+    Element ..> GeometryState : computes
+```
+
+### Updated-Lagrangian sequence
+
+```mermaid
+sequenceDiagram
+    participant Solver
+    participant Block as MaterialElementBlock
+    participant Entry as ElementEntry
+    participant Element as Element formulation
+    participant Geometry as GeometryState
+    participant Material
+    participant State as MaterialState
+    participant Scatter as scatter_force
+
+    Solver->>Block: begin update stage
+    loop for each ElementEntry
+        Block->>Entry: select entry
+        Block->>Entry: refresh geometry
+        Entry->>Element: provide nodes and connectivity
+        Element->>Geometry: compute current geometry
+        Geometry-->>Entry: valid geometry state
+        Block->>Entry: gather stage velocities
+        Entry->>Element: provide geometry and velocities
+        Element-->>Block: return strain rate
+        loop for each Gauss point
+            Block->>Material: update MaterialState
+            Material->>State: write updated history
+            Material-->>Block: update complete
+            Block->>Material: read stress from MaterialState
+            Material-->>Block: return stress
+        end
+        Block->>Element: integrate stress using geometry
+        Element-->>Block: return local internal force
+        Block->>Scatter: scatter local force using connectivity
+    end
+    Scatter-->>Solver: accumulated nodal internal force
+```
+
+In the updated-Lagrangian formulation, the block processes each entry in turn. The element computes the entry geometry state from the current nodal configuration, and the same state is used for strain-rate evaluation and force integration. For each Gauss point, the material updates the persistent state and provides stress. The block then asks the element for local force and scatters it through the entry connectivity. Geometry rebuilds do not recreate or reset material states.
 
 ## Repository modularity
 
