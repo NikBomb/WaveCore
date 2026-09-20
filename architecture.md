@@ -287,10 +287,11 @@ sequenceDiagram
         Entry->>Element: provide geometry and velocities
         Element-->>Block: return strain rate
         loop for each Gauss point
-            Block->>Material: update MaterialState
-            Material->>State: write updated history
+            Block->>Material: update MaterialState with strain rate
+            Material->>State: save stress and history
             Material-->>Block: update complete
             Block->>Material: read stress from MaterialState
+            State-->>Material: stored stress
             Material-->>Block: return stress
         end
         Block->>Element: integrate stress using geometry
