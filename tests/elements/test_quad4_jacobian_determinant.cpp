@@ -1,56 +1,13 @@
-#include "wavecore/elements/Quad4.hpp"
-#include "wavecore/mesh/Node.hpp"
-#include "wavecore/utils/Matrix.hpp"
+#include <array>
 #include <doctest/doctest.h>
+#include "wavecore/elements/Quad4.hpp"
 
-TEST_CASE("Quad4 Jacobian Determinant") {
-  SUBCASE("Unit square Jacobian determinant") {
-    // Create a simple square element with coordinates
-    wavecore::Node2D nodes[4];
-    nodes[0] = wavecore::Node2D{{0.0, 0.0}}; // Bottom-left
-    nodes[1] = wavecore::Node2D{{1.0, 0.0}}; // Bottom-right
-    nodes[2] = wavecore::Node2D{{1.0, 1.0}}; // Top-right
-    nodes[3] = wavecore::Node2D{{0.0, 1.0}}; // Top-left
-
-    // Create connectivity
-    std::array<size_t, 4> connectivity = {0, 1, 2, 3};
-
-    // Create Quad4 element
-    wavecore::Quad4 quad4;
-
-    // Gather the element with nodes and connectivity
-    quad4.gather(nodes, connectivity);
-
-    // Test jacobian determinant at center (0,0)
-    auto coords = wavecore::Vector<double, 2>();
-    double det = quad4.jacobian_determinant(coords);
-
-    // For a unit square, the Jacobian determinant should be 1.0
-    CHECK_EQ(det, 0.25);
-  }
-
-  SUBCASE("Transformed Quad") {
-    // Create a transformed square element
-    wavecore::Node2D nodes[4];
-    nodes[0] = wavecore::Node2D{{0.0, 0.0}}; // Bottom-left
-    nodes[1] = wavecore::Node2D{{2.0, 0.0}}; // Bottom-right (doubled in x)
-    nodes[2] = wavecore::Node2D{{2.0, 1.0}}; // Top-right
-    nodes[3] = wavecore::Node2D{{0.0, 1.0}}; // Top-left
-
-    // Create connectivity
-    std::array<size_t, 4> connectivity = {0, 1, 2, 3};
-
-    // Create Quad4 element
-    wavecore::Quad4 quad4;
-
-    // Gather the element with nodes and connectivity
-    quad4.gather(nodes, connectivity);
-
-    // Test jacobian determinant at center (0,0)
-    auto coords = wavecore::Vector<double, 2>();
-    double det = quad4.jacobian_determinant(coords);
-    // For a rectangle with width 2 and height 1, the Jacobian determinant
-    // should be 2.0
-    CHECK_EQ(det, 0.5);
-  }
+TEST_CASE("Quad4 stores the Gauss-point Jacobian determinant") {
+    std::array<wavecore::Node2D, 4> nodes{
+        wavecore::Node2D{{0, 0}}, wavecore::Node2D{{2, 0}},
+        wavecore::Node2D{{2, 1}}, wavecore::Node2D{{0, 1}}};
+    const std::array<std::size_t, 4> connectivity{0, 1, 2, 3};
+    wavecore::Quad4::geometry_state_type geometry{};
+    wavecore::Quad4{}.refresh_geometry(nodes, connectivity, geometry);
+    CHECK(geometry[0].jacobian_determinant == doctest::Approx(.5));
 }

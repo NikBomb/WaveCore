@@ -37,9 +37,10 @@ TEST_CASE("Two adjacent quads accumulate internal forces at shared nodes") {
     const wavecore::PlaneElementProperties properties{1.0};
     std::span<wavecore::Node2D> node_view{nodes};
     wavecore::Quad4 element;
+    wavecore::Quad4::geometry_state_type geometry{};
     for (const auto& connectivity : {left, right}) {
-        element.gather(node_view, connectivity);
-        const auto forces = element.internal_force(stresses, properties);
+        element.refresh_geometry(node_view, connectivity, geometry);
+        const auto forces = element.internal_force(stresses, properties, geometry);
         wavecore::scatter_force(node_view, connectivity, forces);
     }
     const std::array<double, 6> expected_x{-1.0, 0.0, 1.0, -1.0, 0.0, 1.0};
