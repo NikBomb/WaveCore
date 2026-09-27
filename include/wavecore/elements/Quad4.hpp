@@ -29,6 +29,7 @@ public:
         Matrix<double, dimension, nodes_per_element> gradients{};
         double jacobian_determinant = 0.0;
     };
+    using geometry_point_type = geometry_point;
     using geometry_state_type = std::array<geometry_point, gauss_points>;
     using nodal_velocity_type = Matrix<double, nodes_per_element, dimension>;
 

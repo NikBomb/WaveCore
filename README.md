@@ -4,32 +4,57 @@ WaveCore is an experimental explicit finite-element code for elastodynamics,
 wave propagation, and future fracture-mechanics research.
 
 The repository currently contains a tested finite-element core, not a complete
-solver. The application is still a placeholder; mesh construction, time
-integration, material updates, and global force assembly are not yet connected
-into an end-to-end simulation.
+solver. Mesh construction, time integration, material updates, and global
+force assembly are not yet connected into an end-to-end simulation.
 
-## Architecture: typed ECS-style material blocks
+## Architecture: ECS-style archetypes and relations
 
-The central architectural idea is a typed block that behaves like an ECS
-archetype.
-
-`MaterialElementBlock<Element, Material>` groups elements that share the same
-element formulation and material model. The block owns the data columns for
-that group:
+WaveCore uses a typed, data-oriented ECS model. Archetypes own components;
+relations own indexes between entities; systems join and update the data.
 
 ```text
-MaterialElementBlock
-├── one material definition
-├── connectivity[element]
-├── properties[element]
-├── geometry[element][gauss point]
-├── nodal velocities[element]
-└── material states[element][gauss point]
+NodeArchetype
+ElementArchetype<Element>
+MaterialArchetype<Material>
+GaussPointArchetype<Element, Material>
+
+ElementNodeRelation
+ElementGaussPointRelation
+GaussPointMaterialRelation
 ```
 
-The important consequence is that an element is not an owning object. `Quad4`
-is a reusable, stateless formulation and kernel. It receives caller-owned data
-and can process every element in a block:
+The archetypes have separate responsibilities:
+
+- `NodeArchetype` owns nodal components such as coordinates, velocity, and
+  forces.
+- `ElementArchetype<Element>` owns element-level components such as
+  properties.
+- `MaterialArchetype<Material>` owns shared constitutive definitions and
+  parameters.
+- `GaussPointArchetype<Element, Material>` owns integration-point geometry
+  and material history, including stress.
+
+Connectivity is not embedded in the element archetype. It is relational data:
+
+```text
+ElementNodeRelation
+    element_id → node_ids[local_node]
+
+ElementGaussPointRelation
+    element_id → gauss_point_ids[local_gauss_point]
+
+GaussPointMaterialRelation
+    gauss_point_id → material_id
+```
+
+This keeps archetypes as component stores and lets systems join them without
+creating ownership dependencies between archetypes.
+
+## Stateless formulations
+
+`Quad4` is a reusable element formulation and kernel. It owns no per-element
+coordinates, connectivity, geometry, velocity, or material history. It
+operates on caller-owned components:
 
 ```cpp
 element.refresh_geometry(nodes, connectivity, geometry);
@@ -38,60 +63,62 @@ auto strain_rate = element.strain_rate_tensor(geometry, velocities);
 auto forces = element.internal_force(stresses, properties, geometry);
 ```
 
-This provides ECS-style data ownership without requiring a general-purpose
-entity registry. Blocks are homogeneous batches, which keeps material states
-typed, avoids per-element allocations, and provides a natural boundary for
-CPU vectorization or future GPU kernels. The current storage is contiguous by
-column; it can later be changed to a flatter SoA or AoSoA layout without
-changing the formulation model.
+Material types similarly define constitutive behavior and state layout without
+owning the states. A new element or material implements its concept; the
+archetype and relation infrastructure remains generic.
+
+## Systems
+
+Systems perform the joins and update components. For example:
+
+```text
+GeometrySystem
+    NodeArchetype + ElementArchetype + ElementNodeRelation
+    → GaussPoint geometry components
+
+MaterialUpdateSystem
+    GaussPoint components + MaterialArchetype
+    → GaussPoint material-state components
+
+ForceAssemblySystem
+    GaussPoint stress/geometry + ElementNodeRelation
+    → nodal internal forces
+```
+
+An archetype may be read or updated by multiple systems. The archetype does
+not know which systems use it.
+
+The stress and constitutive history belong to Gauss-point entities, not shared
+material definitions. One material definition may therefore serve many
+Gauss points while every Gauss point retains independent history.
 
 ## Current components
 
-- `Node<Dimension>` stores nodal coordinates, displacement, velocity,
-  acceleration, mass, and forces.
+- `Node<Dimension>` provides two- and three-dimensional nodal value types.
 - `Quad4` implements a two-dimensional four-node quadrilateral with one centre
   Gauss point.
 - `LinearElasticPlaneStrain` implements isotropic small-strain plane-strain
   elasticity.
-- `PlaneElementProperties` stores validated positive element thickness.
-- `MaterialElementBlock` owns grouped element data and material history.
-- `scatter_force` accumulates local element forces into shared nodes.
-- C++ concepts validate element and material interfaces at compile time.
-
-Geometry state is derived data: physical shape-function gradients, Jacobians,
-and Jacobian determinants are rebuilt from nodal geometry. Material state is
-persistent constitutive history and is initialized through the material.
-Stress is part of the material state and is read after the material update for
-force assembly.
-
-## Constitutive and assembly flow
-
-The intended block-level sequence is:
-
-1. Refresh block geometry when nodal positions change.
-2. Gather current nodal velocities.
-3. Compute strain rates using the block geometry state.
-4. Update each integration-point material state.
-5. Read updated stress from each material state.
-6. Integrate local internal forces.
-7. Scatter and accumulate those forces into the nodes.
-
-Material updates mutate history. Geometry refresh and force assembly do not
-advance material history.
+- `ElementArchetype`, `MaterialArchetype`, and `GaussPointArchetype` provide
+  typed component storage.
+- Relation classes provide external element/node, element/Gauss-point, and
+  Gauss-point/material indexes.
+- `scatter_force` accumulates local forces into shared nodes.
 
 ## Repository layout
 
 ```text
-include/wavecore/blocks/       Typed material blocks
-include/wavecore/elements/     Element formulations and properties
-include/wavecore/materials/    Material concepts and constitutive models
-include/wavecore/mesh/         Nodes and force scattering
-tests/                         Component and numerical tests
-apps/                          Placeholder executable
+include/wavecore/archetypes/  Typed component stores
+include/wavecore/relations/   External relationship indexes
+include/wavecore/elements/    Element formulations and properties
+include/wavecore/materials/   Material concepts and constitutive models
+include/wavecore/mesh/        Nodes and force scattering
+tests/                        Component and numerical tests
+apps/                         Placeholder executable
 ```
 
-See [architecture.md](architecture.md) for the longer design description and
-current limitations.
+See [architecture.md](architecture.md) for the detailed ownership and system
+model.
 
 ## Building and testing
 
@@ -103,13 +130,14 @@ cmake --build --preset gcc14-debug
 ctest --preset gcc14-debug --output-on-failure
 ```
 
-The test suite covers concept conformance, material-state initialization,
-stateless element kernels, geometry and Jacobian calculations, internal-force
-integration, thickness scaling, and shared-node force scattering.
+The tests cover concept conformance, material initialization, stateless
+element kernels, geometry and Jacobian calculations, force integration,
+thickness scaling, shared-node scattering, archetype storage, and relation
+indexes.
 
 ## Status and next steps
 
-The typed block and stateless element kernel are implemented. The next major
-work is to add block-level material-update and force-assembly kernels, then
-introduce the small runtime block interface needed to process heterogeneous
-element/material blocks from a solver.
+The separate archetypes, external relations, and stateless element kernel are
+implemented. The next work is to add generic systems that perform the joins
+and update geometry, material states, and nodal forces. Execution tiles can be
+introduced after the storage and system boundaries are stable.
