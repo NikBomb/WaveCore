@@ -27,6 +27,13 @@ public:
         return coordinates_;
     }
 
+    [[nodiscard]] Vector current_coordinates() const noexcept {
+        Vector result = coordinates_;
+        for (std::size_t d = 0; d < Dimension; ++d)
+            result[d] += displacement_[d];
+        return result;
+    }
+
     [[nodiscard]] Vector& displacement() noexcept {
         return displacement_;
     }

@@ -33,6 +33,7 @@ public:
     using geometry_point_type = geometry_point;
     using geometry_state_type = std::array<geometry_point, gauss_points>;
     using nodal_velocity_type = Matrix<double, nodes_per_element, dimension>;
+    using nodal_displacement_type = Matrix<double, nodes_per_element, dimension>;
     using strain_rate_type = Matrix<double, dimension, dimension>;
     struct element_geometry_type {
         double measure = 0.0;
@@ -49,7 +50,8 @@ public:
         Matrix<double, nodes_per_element, dimension> coordinates{};
         for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
             for (std::size_t d = 0; d < dimension; ++d)
-                coordinates(inode, d) = nodes[connectivity[inode]].coordinates()[d];
+                coordinates(inode, d) =
+                    nodes[connectivity[inode]].current_coordinates()[d];
 
         const auto points = quadrature();
         for (std::size_t gp = 0; gp < gauss_points; ++gp) {
@@ -80,8 +82,9 @@ public:
         std::span<const std::size_t, nodes_per_element> connectivity) const {
         double result = HUGE_VAL;
         for (std::size_t edge = 0; edge < num_edges; ++edge) {
-            const auto& first = nodes[connectivity[edge]].coordinates();
-            const auto& second = nodes[connectivity[(edge + 1) % nodes_per_element]].coordinates();
+            const auto first = nodes[connectivity[edge]].current_coordinates();
+            const auto second = nodes[connectivity[(edge + 1) % nodes_per_element]]
+                                    .current_coordinates();
             const double dx = first[0] - second[0];
             const double dy = first[1] - second[1];
             result = std::min(result, std::sqrt(dx * dx + dy * dy));
@@ -95,6 +98,21 @@ public:
         for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
             for (std::size_t d = 0; d < dimension; ++d)
                 velocities(inode, d) = nodes[connectivity[inode]].velocity()[d];
+    }
+
+    void gather_displacements(std::span<const node_type> nodes,
+                              std::span<const std::size_t, nodes_per_element> connectivity,
+                              nodal_displacement_type& displacements) const noexcept {
+        for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
+            for (std::size_t d = 0; d < dimension; ++d)
+                displacements(inode, d) = nodes[connectivity[inode]].displacement()[d];
+    }
+
+    [[nodiscard]] strain_rate_type strain_tensor(
+        const geometry_state_type& geometry,
+        const nodal_displacement_type& displacements,
+        std::size_t gp = 0) const {
+        return symmetric(geometry.at(gp).gradients * displacements);
     }
 
     [[nodiscard]] Matrix<double, dimension, dimension>

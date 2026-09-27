@@ -116,6 +116,35 @@ ForceAssemblySystem
     writes nodal internal forces
 ```
 
+Explicit dynamics systems use the same joins and do not add ownership to the
+archetypes:
+
+```text
+MassSystem
+    reads ElementArchetype, MaterialArchetype, and relations
+    writes lumped nodal masses
+
+ExplicitLeapfrogSystem
+    reads/writes nodal velocity, displacement, acceleration, and forces
+    advances velocity in half steps and displacement in full steps
+    refreshes current Gauss-point geometry
+    updates material state once per full step
+    assembles internal forces
+
+EnergySystem
+    reads nodal velocity/mass and Gauss-point stress/geometry
+    reports kinetic and internal strain energy without owning additional state
+```
+
+The explicit implementation follows Belytschko's two-force-evaluation
+leapfrog sequence. Damping is not included in the benchmark path. `Quad4`
+uses reference node coordinates plus nodal displacement as the current
+configuration, while the constitutive model remains linear small-strain
+elasticity for comparison with the analytical benchmark.
+The initial benchmark intentionally uses one Gauss point per `Quad4` and no
+hourglass control; this is an explicit test choice, not a claim that reduced
+integration is sufficient for general production analyses.
+
 The stress system does not link archetypes permanently. It resolves the
 relations at execution time and performs the required joins.
 
@@ -151,6 +180,9 @@ The intended update sequence is:
    constitutive states for `dt`.
 5. `ForceAssemblySystem` reads updated stress and geometry, integrates local
    forces, follows element/node relations, and accumulates nodal forces.
+6. The explicit integrator computes lumped-mass accelerations, applies the
+   first half velocity update, updates displacements, evaluates material and
+   force systems again, and completes the second half velocity update.
 
 Material updates mutate history. Geometry refresh and force assembly do not
 advance constitutive state.
@@ -181,11 +213,40 @@ Implemented:
 - external element/node, element/Gauss-point, and Gauss-point/material
   relations;
 - local force integration, generic systems, and shared-node force scattering; and
-- component, numerical, archetype, and relation tests.
+- lumped-mass explicit leapfrog updates and critical-timestep estimation;
+- kinetic/internal energy diagnostics;
+- the Chiappa analytical bulk-wave reference evaluator; and
+- component, numerical, archetype, relation, and benchmark comparison tests.
 
 Not yet implemented:
 
 - execution tiles;
 - non-owning entry/debug views;
 - runtime query/factory integration; and
-- an end-to-end solver.
+- general external loads and time-dependent prescribed motion.
+
+## Simulation orchestration and output
+
+`ExplicitDynamicsSystem::run` is the reusable, stateless orchestration system.
+Its non-owning `ExplicitDynamicsQuery` joins the separate archetypes through
+external relations; it does not move component ownership into a solver.
+The application supplies the populated mesh/material stores, nodal IC callback,
+boundary constraints, final time, and optional numerical/output policies.
+The system applies IC and BC, initializes geometry, lumped mass, forces and
+accelerations, and runs the leapfrog stages through the exact final time.
+It recomputes the current geometry-based timestep estimate and caps it by the
+optional maximum timestep. This retains the existing Quad4 mass and material
+kernels; it does not introduce a new constitutive formulation.
+
+Output responsibilities are split deliberately:
+
+- The application defines the output interval and snapshot times, and implements
+  the writer/observer (CSV, analytical comparison, visualization, etc.).
+- The system decides when to call that observer, shortening steps to reach output
+  times and the final time. Events identify initial/final, history, and snapshot
+  output. Initial and final states are always delivered.
+
+The Chiappa application contains no integration loop or manual initialization
+stages. Its IC remains a direct nodal assignment. Current BC support is stationary
+homogeneous displacement/velocity constraints; this is not yet a general loading
+or restart API. GP initial constitutive state remains problem-supplied.

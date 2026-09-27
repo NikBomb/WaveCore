@@ -45,6 +45,10 @@ public:
 
     [[nodiscard]] double density() const noexcept { return density_; }
 
+    [[nodiscard]] double longitudinal_wave_speed() const noexcept {
+        return std::sqrt((lambda_ + 2.0 * shear_modulus_) / density_);
+    }
+
     [[nodiscard]] state_type initial_state() const { return {}; }
 
     // strain_rate is a finite, symmetric small-strain-rate tensor: its xy entry

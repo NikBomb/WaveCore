@@ -3,9 +3,9 @@
 WaveCore is an experimental explicit finite-element code for elastodynamics,
 wave propagation, and future fracture-mechanics research.
 
-The repository currently contains a tested finite-element core, not a complete
-solver. Mesh construction, time integration, material updates, and global
-force assembly are not yet connected into an end-to-end simulation.
+The repository currently contains a tested finite-element core and the first
+explicit dynamics systems, including reusable simulation orchestration and
+scheduled output callbacks. A mesh loader is not yet implemented.
 
 ## Architecture: ECS-style archetypes and relations
 
@@ -130,6 +130,26 @@ cmake --build --preset gcc14-debug
 ctest --preset gcc14-debug --output-on-failure
 ```
 
+The Chiappa bulk-wave comparison can be generated with:
+
+```bash
+LSAN_OPTIONS=detect_leaks=0 build/gcc14-debug/apps/chiappa_bulk_wave \
+    artifacts/chiappa_bulk/chiappa_snapshot.csv 160
+MPLCONFIGDIR=/tmp/wavecore-mpl python3 scripts/plot_chiappa_snapshot.py \
+    artifacts/chiappa_bulk/chiappa_snapshot.csv.71us.csv \
+    artifacts/chiappa_bulk/chiappa_snapshot.png
+```
+
+The default mesh is 160 x 160; pass 320 for the refined comparison. Each run
+saves the domain at 71 microseconds, a point history through 470 microseconds,
+the final domain, and the direct nodal initial velocities. See
+[the comparison instructions](artifacts/chiappa_bulk/NODAL_COMPARISON.md)
+for matched-time domain and history plots for both meshes.
+
+The one-point `Quad4` run is a diagnostic comparison.
+It intentionally has no hourglass control and should not yet be treated as a
+production-accuracy result.
+
 The tests cover concept conformance, material initialization, stateless
 element kernels, geometry and Jacobian calculations, force integration,
 thickness scaling, shared-node scattering, archetype storage, and relation
@@ -137,7 +157,13 @@ indexes.
 
 ## Status and next steps
 
-The separate archetypes, external relations, stateless element kernel, and
-generic geometry/material/force systems are implemented. The next work is to
-add non-owning entry views, improve entity/index handling, and introduce
-execution tiles after the storage and system boundaries are stable.
+The separate archetypes, external relations, stateless element kernel,
+generic geometry/material/force systems, lumped-mass leapfrog systems, and the
+Chiappa analytical bulk-wave benchmark are implemented.
+`ExplicitDynamicsSystem::run` handles initialization and time integration;
+the application supplies the mesh/material data, IC, BC, and final time.
+Optional policies set a timestep cap and output schedule. The system triggers
+output events; application callbacks decide what and how to write.
+Current BC support is limited to stationary homogeneous constraints.
+Next steps include general loads and prescribed motion, improved entity/index
+handling, and execution tiles once the system boundaries are stable.

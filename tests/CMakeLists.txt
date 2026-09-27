@@ -21,6 +21,7 @@ target_sources(wavecore_tests
         elements/test_element_concept.cpp
         archetypes/test_archetypes_and_relations.cpp
         systems/test_finite_element_systems.cpp
+        benchmarks/test_chiappa_bulk_wave.cpp
         elements/test_quad4_kernel_api.cpp
         elements/test_quad4_gather.cpp
         elements/test_quad4_quadrature.cpp
