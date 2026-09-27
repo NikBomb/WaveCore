@@ -137,7 +137,7 @@ indexes.
 
 ## Status and next steps
 
-The separate archetypes, external relations, and stateless element kernel are
-implemented. The next work is to add generic systems that perform the joins
-and update geometry, material states, and nodal forces. Execution tiles can be
-introduced after the storage and system boundaries are stable.
+The separate archetypes, external relations, stateless element kernel, and
+generic geometry/material/force systems are implemented. The next work is to
+add non-owning entry views, improve entity/index handling, and introduce
+execution tiles after the storage and system boundaries are stable.

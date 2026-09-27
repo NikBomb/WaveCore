@@ -34,8 +34,10 @@ concept IElementConcept = requires {
     requires (E::gauss_points > 0);
     typename E::node_type;
     typename E::properties_type;
+    typename E::element_geometry_type;
     typename E::geometry_state_type;
     typename E::nodal_velocity_type;
+    typename E::strain_rate_type;
 } && requires(const E element, ConstNodeSpan<E> nodes,
               ElementConnectivity<E> connectivity,
               typename E::geometry_state_type& geometry,
@@ -46,9 +48,11 @@ concept IElementConcept = requires {
               const typename E::properties_type& properties) {
     { element.quadrature() } -> std::same_as<ElementQuadrature<E>>;
     { element.refresh_geometry(nodes, connectivity, geometry) } -> std::same_as<void>;
+    { element.measure(nodes, connectivity) } -> std::same_as<double>;
+    { element.characteristic_length(nodes, connectivity) } -> std::same_as<double>;
     { element.gather_velocities(nodes, connectivity, velocities) } -> std::same_as<void>;
     { element.strain_rate_tensor(const_geometry, const_velocities) }
-        -> std::same_as<ElementMatrix<E>>;
+        -> std::same_as<typename E::strain_rate_type>;
     { element.internal_force(stresses, properties, const_geometry) }
         -> std::same_as<ElementLocalVector<E>>;
 };

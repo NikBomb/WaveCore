@@ -2,6 +2,7 @@
 #define WAVECORE_QUAD4_HPP
 
 #include <array>
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <span>
@@ -32,6 +33,12 @@ public:
     using geometry_point_type = geometry_point;
     using geometry_state_type = std::array<geometry_point, gauss_points>;
     using nodal_velocity_type = Matrix<double, nodes_per_element, dimension>;
+    using strain_rate_type = Matrix<double, dimension, dimension>;
+    struct element_geometry_type {
+        double measure = 0.0;
+        double characteristic_length = 0.0;
+        bool valid = false;
+    };
 
     [[nodiscard]] constexpr std::array<QuadraturePoint<dimension>, gauss_points>
     quadrature() const noexcept { return {{{{0.0, 0.0}, 4.0}}}; }
@@ -54,6 +61,32 @@ public:
             point.gradients = inverse(point.jacobian) *
                               derivatives_shape_functions_parent(points[gp].coordinates);
         }
+    }
+
+    [[nodiscard]] double measure(
+        std::span<const node_type> nodes,
+        std::span<const std::size_t, nodes_per_element> connectivity) const {
+        geometry_state_type geometry{};
+        refresh_geometry(nodes, connectivity, geometry);
+        double result = 0.0;
+        const auto points = quadrature();
+        for (std::size_t gp = 0; gp < gauss_points; ++gp)
+            result += points[gp].weight * geometry[gp].jacobian_determinant;
+        return result;
+    }
+
+    [[nodiscard]] double characteristic_length(
+        std::span<const node_type> nodes,
+        std::span<const std::size_t, nodes_per_element> connectivity) const {
+        double result = HUGE_VAL;
+        for (std::size_t edge = 0; edge < num_edges; ++edge) {
+            const auto& first = nodes[connectivity[edge]].coordinates();
+            const auto& second = nodes[connectivity[(edge + 1) % nodes_per_element]].coordinates();
+            const double dx = first[0] - second[0];
+            const double dy = first[1] - second[1];
+            result = std::min(result, std::sqrt(dx * dx + dy * dy));
+        }
+        return result;
     }
 
     void gather_velocities(std::span<const node_type> nodes,

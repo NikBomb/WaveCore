@@ -4,6 +4,7 @@
 #include "wavecore/archetypes/ElementArchetype.hpp"
 #include "wavecore/archetypes/GaussPointArchetype.hpp"
 #include "wavecore/archetypes/MaterialArchetype.hpp"
+#include "wavecore/archetypes/NodeArchetype.hpp"
 #include "wavecore/elements/Quad4.hpp"
 #include "wavecore/materials/LinearElasticPlaneStrain.hpp"
 #include "wavecore/relations/ElementRelations.hpp"
@@ -12,6 +13,7 @@ using Element = wavecore::Quad4;
 using Material = wavecore::LinearElasticPlaneStrain;
 
 TEST_CASE("Separate archetypes own components and relations own indexes") {
+    wavecore::NodeArchetype<2> nodes;
     wavecore::ElementArchetype<Element> elements;
     wavecore::MaterialArchetype<Material> materials;
     wavecore::GaussPointArchetype<Element, Material> points;
@@ -34,6 +36,7 @@ TEST_CASE("Separate archetypes own components and relations own indexes") {
     CHECK(element_points.points(point_relation)[0] == point);
     CHECK(point_materials.material(material_relation) == material);
     CHECK(points.state(point).stress(0, 0) == 0.0);
+    CHECK(nodes.size() == 0);
 }
 
 TEST_CASE("Gauss-point archetype stores geometry and independent material state") {

@@ -40,7 +40,8 @@ currently includes element properties such as thickness. Element/node
 connectivity is deliberately not stored here; it is a relation.
 
 The element formulation is stateless and reusable. The archetype stores data,
-not one element object per entity.
+not one element object per entity. Element-level derived geometry such as
+measure and characteristic length is stored here.
 
 ### MaterialArchetype<Material>
 
@@ -179,12 +180,11 @@ Implemented:
 - `GaussPointArchetype` geometry and constitutive-state storage;
 - external element/node, element/Gauss-point, and Gauss-point/material
   relations;
-- local force integration and shared-node force scattering; and
+- local force integration, generic systems, and shared-node force scattering; and
 - component, numerical, archetype, and relation tests.
 
 Not yet implemented:
 
-- generic geometry, material-update, and force-assembly systems;
 - execution tiles;
 - non-owning entry/debug views;
 - runtime query/factory integration; and

@@ -20,6 +20,7 @@ target_sources(wavecore_tests
         materials/test_linear_elastic_plane_strain.cpp
         elements/test_element_concept.cpp
         archetypes/test_archetypes_and_relations.cpp
+        systems/test_finite_element_systems.cpp
         elements/test_quad4_kernel_api.cpp
         elements/test_quad4_gather.cpp
         elements/test_quad4_quadrature.cpp
