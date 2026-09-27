@@ -1,5 +1,15 @@
 # WaveCore
 
+## Dedication
+
+To the memory of my mentor, Nik Petrinic.
+
+For the many nights we spent discussing finite elements, and the curiosity and
+passion for research you shared so generously. I cherish those conversations and
+carry their inspiration with me as I strive to become a better researcher.
+
+## About
+
 WaveCore is an experimental explicit finite-element code for elastodynamics,
 wave propagation, and future fracture-mechanics research.
 
