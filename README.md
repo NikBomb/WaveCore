@@ -132,6 +132,9 @@ model.
 
 ## Building and testing
 
+See the [benchmark guide](benchmarks/chiappa_bulk_wave.md) for the full Chiappa
+setup, release-build run commands, expected errors, and saved figures.
+
 The project uses CMake and requires a C++23 compiler.
 
 ```bash
