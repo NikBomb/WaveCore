@@ -14,6 +14,7 @@ class Node {
     );
 
 public:
+    static constexpr std::size_t dimension = Dimension;
     using Vector = std::array<double, Dimension>;
 
     Node() = default;

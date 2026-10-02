@@ -4,14 +4,21 @@
 #include <array>
 #include <cstddef>
 #include <utility>
-#include <vector>
+#include "wavecore/fields/Entries.hpp"
+#include "wavecore/fields/FieldStorage.hpp"
 
 #include "wavecore/elements/IElementConcept.hpp"
 
 namespace wavecore {
 
+// Every relation value is a storage row, not a stable entity ID. Each named
+// slot has its own contiguous integer array. Reordering entities requires
+// updating these external row mappings. Views are invalidated by growth.
+
 template <IElementConcept Element>
 class ElementNodeRelation {
+    using Entry = typename ElementRelationEntries<Element>::Node;
+    static_assert(static_cast<std::size_t>(Entry::count) == Element::nodes_per_element);
 public:
     using connectivity_type = std::array<std::size_t, Element::nodes_per_element>;
 
@@ -21,16 +28,22 @@ public:
         connectivity_.push_back(std::move(connectivity));
         return index;
     }
-    [[nodiscard]] const connectivity_type& nodes(std::size_t element) const {
-        return connectivity_.at(element);
+    [[nodiscard]] connectivity_type nodes(std::size_t element) const {
+        if (element >= size()) throw std::out_of_range("Element node relation row exceeds storage");
+        connectivity_type result{};
+        for (std::size_t i=0;i<result.size();++i) result[i]=connectivity_[static_cast<Entry>(i)][element];
+        return result;
     }
 
+    [[nodiscard]] auto view() const noexcept { return connectivity_.view(); }
 private:
-    std::vector<connectivity_type> connectivity_;
+    FieldStorage<Entry,std::size_t> connectivity_;
 };
 
 template <IElementConcept Element>
 class ElementGaussPointRelation {
+    using Entry = typename ElementRelationEntries<Element>::Point;
+    static_assert(static_cast<std::size_t>(Entry::count) == Element::gauss_points);
 public:
     using points_type = std::array<std::size_t, Element::gauss_points>;
 
@@ -40,12 +53,16 @@ public:
         points_.push_back(std::move(points));
         return index;
     }
-    [[nodiscard]] const points_type& points(std::size_t element) const {
-        return points_.at(element);
+    [[nodiscard]] points_type points(std::size_t element) const {
+        if (element >= size()) throw std::out_of_range("Element point relation row exceeds storage");
+        points_type result{};
+        for (std::size_t i=0;i<result.size();++i) result[i]=points_[static_cast<Entry>(i)][element];
+        return result;
     }
 
+    [[nodiscard]] auto view() const noexcept { return points_.view(); }
 private:
-    std::vector<points_type> points_;
+    FieldStorage<Entry,std::size_t> points_;
 };
 
 class GaussPointMaterialRelation {
@@ -60,8 +77,9 @@ public:
         return material_indices_.at(point);
     }
 
+    [[nodiscard]] auto view() const noexcept { return material_indices_.view(); }
 private:
-    std::vector<std::size_t> material_indices_;
+    ScalarStorage<std::size_t> material_indices_;
 };
 
 } // namespace wavecore

@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
                 static_cast<double>(j) * spacing};
             static_cast<void>(nodes.add_node(wavecore::Node2D{coordinate}));
         }
-    const auto initial_conditions = [&](std::span<wavecore::Node2D> initial_nodes) {
-        for (auto& node : initial_nodes) {
+    const auto initial_conditions = [&](wavecore::NodeView<2> initial_nodes) {
+        for (auto&& node : initial_nodes) {
             const auto& coordinate = node.coordinates();
             // Direct nodal IC. Patch-edge nodes receive the full prescribed
             // velocity. No smoothing, projection, or Fourier reconstruction.
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     };
 
     const auto observe = [&](wavecore::DynamicsOutputEvent event,
-                             std::span<const wavecore::Node2D> observed_nodes) {
+                             wavecore::NodeView<2,const double> observed_nodes) {
         const double time = event.time;
         if (event.history || event.final) {
             const auto expected = reference.displacement(.25, .25, time);
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
         wavecore::ExplicitDynamicsQuery<Element, Material>{
             elements, nodes.values(), element_nodes, element_points,
             materials, point_materials, points},
-        constraints, initial_conditions, final_time, observe,
+        constraints.view(), initial_conditions, final_time, observe,
         wavecore::ExplicitDynamicsOptions{dt, 0.9},
         wavecore::DynamicsOutputSchedule{1.0e-7, {71.0e-6}});
 }

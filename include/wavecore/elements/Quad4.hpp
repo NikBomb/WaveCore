@@ -11,7 +11,7 @@
 #include "wavecore/elements/IElementConcept.hpp"
 #include "wavecore/elements/PlaneElementProperties.hpp"
 #include "wavecore/elements/QuadraturePoint.hpp"
-#include "wavecore/mesh/Node.hpp"
+#include "wavecore/mesh/NodeView.hpp"
 #include "wavecore/utils/Matrix.hpp"
 
 namespace wavecore {
@@ -44,14 +44,17 @@ public:
     [[nodiscard]] constexpr std::array<QuadraturePoint<dimension>, gauss_points>
     quadrature() const noexcept { return {{{{0.0, 0.0}, 4.0}}}; }
 
-    void refresh_geometry(std::span<const node_type> nodes,
+    template <class Nodes>
+    void refresh_geometry(const Nodes& nodes,
                           std::span<const std::size_t, nodes_per_element> connectivity,
                           geometry_state_type& geometry) const {
         Matrix<double, nodes_per_element, dimension> coordinates{};
         for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
             for (std::size_t d = 0; d < dimension; ++d)
-                coordinates(inode, d) =
-                    nodes[connectivity[inode]].current_coordinates()[d];
+                if constexpr (requires { nodes.current_coordinates(std::size_t{}); })
+                    coordinates(inode,d) = nodes.current_coordinates(connectivity[inode])[d];
+                else
+                    coordinates(inode,d) = nodes[connectivity[inode]].current_coordinates()[d];
 
         const auto points = quadrature();
         for (std::size_t gp = 0; gp < gauss_points; ++gp) {
@@ -65,8 +68,9 @@ public:
         }
     }
 
+    template <class Nodes>
     [[nodiscard]] double measure(
-        std::span<const node_type> nodes,
+        const Nodes& nodes,
         std::span<const std::size_t, nodes_per_element> connectivity) const {
         geometry_state_type geometry{};
         refresh_geometry(nodes, connectivity, geometry);
@@ -77,14 +81,19 @@ public:
         return result;
     }
 
+    template <class Nodes>
     [[nodiscard]] double characteristic_length(
-        std::span<const node_type> nodes,
+        const Nodes& nodes,
         std::span<const std::size_t, nodes_per_element> connectivity) const {
+        const auto current = [&](std::size_t row) {
+            if constexpr (requires { nodes.current_coordinates(row); })
+                return nodes.current_coordinates(row);
+            else return nodes[row].current_coordinates();
+        };
         double result = HUGE_VAL;
         for (std::size_t edge = 0; edge < num_edges; ++edge) {
-            const auto first = nodes[connectivity[edge]].current_coordinates();
-            const auto second = nodes[connectivity[(edge + 1) % nodes_per_element]]
-                                    .current_coordinates();
+            const auto first = current(connectivity[edge]);
+            const auto second = current(connectivity[(edge + 1) % nodes_per_element]);
             const double dx = first[0] - second[0];
             const double dy = first[1] - second[1];
             result = std::min(result, std::sqrt(dx * dx + dy * dy));
@@ -92,20 +101,26 @@ public:
         return result;
     }
 
-    void gather_velocities(std::span<const node_type> nodes,
+    template <class Nodes>
+    void gather_velocities(const Nodes& nodes,
                            std::span<const std::size_t, nodes_per_element> connectivity,
                            nodal_velocity_type& velocities) const noexcept {
         for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
             for (std::size_t d = 0; d < dimension; ++d)
-                velocities(inode, d) = nodes[connectivity[inode]].velocity()[d];
+                if constexpr (requires { nodes.velocity; })
+                    velocities(inode,d) = nodes.velocity[static_cast<VelocityEntry2D>(d)][connectivity[inode]];
+                else velocities(inode,d) = nodes[connectivity[inode]].velocity()[d];
     }
 
-    void gather_displacements(std::span<const node_type> nodes,
+    template <class Nodes>
+    void gather_displacements(const Nodes& nodes,
                               std::span<const std::size_t, nodes_per_element> connectivity,
                               nodal_displacement_type& displacements) const noexcept {
         for (std::size_t inode = 0; inode < nodes_per_element; ++inode)
             for (std::size_t d = 0; d < dimension; ++d)
-                displacements(inode, d) = nodes[connectivity[inode]].displacement()[d];
+                if constexpr (requires { nodes.displacement; })
+                    displacements(inode,d) = nodes.displacement[static_cast<DisplacementEntry2D>(d)][connectivity[inode]];
+                else displacements(inode,d) = nodes[connectivity[inode]].displacement()[d];
     }
 
     [[nodiscard]] strain_rate_type strain_tensor(

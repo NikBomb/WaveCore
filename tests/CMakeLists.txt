@@ -13,6 +13,7 @@ add_executable(wavecore_tests)
 target_sources(wavecore_tests
     PRIVATE
         test_main.cpp
+        fields/test_field_storage.cpp
         mesh/test_structured_quad_mesh.cpp
         mesh/test_nodes.cpp
         mesh/test_scatter_force.cpp

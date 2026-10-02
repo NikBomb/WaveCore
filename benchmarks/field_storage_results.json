@@ -1,0 +1,268 @@
+{
+  "workload": "Full 160x160 Chiappa, final_time=470e-6 s, original event schedule",
+  "baseline_commit": "0eb6836d86253e2750d058ec08422d34dd0553ec",
+  "warmups": 1,
+  "measured_repetitions": 3,
+  "cpu": 0,
+  "threads": 1,
+  "compiler": "GCC 14.2.0",
+  "flags": "-O3 -DNDEBUG, C++23, sanitizers OFF, project warnings as errors",
+  "statistics": "Median and minimum/maximum of three measured repetitions; warm-up excluded",
+  "units": "Seconds except rss_kib (KiB)",
+  "results": {
+    "wall": {
+      "baseline": {
+        "median": 74.637151247,
+        "min": 74.456124414,
+        "max": 74.713367775
+      },
+      "refactored": {
+        "median": 74.456884652,
+        "min": 74.346295802,
+        "max": 74.830655878
+      },
+      "change_percent": -0.24152394884879858
+    },
+    "simulation": {
+      "baseline": {
+        "median": 50.65680999899999,
+        "min": 50.39682867100001,
+        "max": 50.66703091300001
+      },
+      "refactored": {
+        "median": 50.69178041800001,
+        "min": 50.66855191100001,
+        "max": 51.11207490200002
+      },
+      "change_percent": 0.06903399365398855
+    },
+    "setup": {
+      "baseline": {
+        "median": 0.006128517,
+        "min": 0.00593739,
+        "max": 0.006539503
+      },
+      "refactored": {
+        "median": 0.005855222,
+        "min": 0.005795552,
+        "max": 0.00601701
+      },
+      "change_percent": -4.459398578807883
+    },
+    "initial_conditions_output": {
+      "baseline": {
+        "median": 0.011572224,
+        "min": 0.011110479,
+        "max": 0.01194216
+      },
+      "refactored": {
+        "median": 0.011257458,
+        "min": 0.011208218,
+        "max": 0.011372547
+      },
+      "change_percent": -2.7200130242898912
+    },
+    "observer_output": {
+      "baseline": {
+        "median": 24.039048162,
+        "min": 23.952470352,
+        "max": 24.041225066
+      },
+      "refactored": {
+        "median": 23.701412877,
+        "min": 23.660631211,
+        "max": 23.747879006
+      },
+      "change_percent": -1.4045285101334515
+    },
+    "element_geometry": {
+      "baseline": {
+        "median": 11.932514838,
+        "min": 11.887839871,
+        "max": 11.981229425
+      },
+      "refactored": {
+        "median": 11.128595447,
+        "min": 11.12773693,
+        "max": 11.294924809
+      },
+      "change_percent": -6.737216772107891
+    },
+    "point_geometry": {
+      "baseline": {
+        "median": 8.725547741,
+        "min": 8.666955554,
+        "max": 8.74182758
+      },
+      "refactored": {
+        "median": 11.159221844,
+        "min": 11.074138641,
+        "max": 11.161375401
+      },
+      "change_percent": 27.891361955015626
+    },
+    "strain_rates": {
+      "baseline": {
+        "median": 5.846896681,
+        "min": 5.639381096,
+        "max": 5.960625562
+      },
+      "refactored": {
+        "median": 5.109605965,
+        "min": 5.063408065,
+        "max": 5.393227534
+      },
+      "change_percent": -12.60994945226055
+    },
+    "constitutive": {
+      "baseline": {
+        "median": 2.959885838,
+        "min": 2.937835174,
+        "max": 2.962154448
+      },
+      "refactored": {
+        "median": 3.251798128,
+        "min": 3.226800167,
+        "max": 3.272251335
+      },
+      "change_percent": 9.862282060082617
+    },
+    "force_assembly": {
+      "baseline": {
+        "median": 8.318682838,
+        "min": 8.213625145,
+        "max": 8.361517997
+      },
+      "refactored": {
+        "median": 8.368361524,
+        "min": 8.243816248,
+        "max": 8.432728354
+      },
+      "change_percent": 0.5971941347861831
+    },
+    "force_clear": {
+      "baseline": {
+        "median": 0.961919813,
+        "min": 0.95982255,
+        "max": 0.964087253
+      },
+      "refactored": {
+        "median": 0.429917379,
+        "min": 0.423891511,
+        "max": 0.439124265
+      },
+      "change_percent": -55.30631834485356
+    },
+    "acceleration": {
+      "baseline": {
+        "median": 1.209743582,
+        "min": 1.205867061,
+        "max": 1.210773327
+      },
+      "refactored": {
+        "median": 2.427155367,
+        "min": 2.419295176,
+        "max": 2.427325382
+      },
+      "change_percent": 100.63387011215409
+    },
+    "half_velocity": {
+      "baseline": {
+        "median": 1.863992123,
+        "min": 1.861068267,
+        "max": 1.867963954
+      },
+      "refactored": {
+        "median": 0.756683185,
+        "min": 0.755056205,
+        "max": 0.762738209
+      },
+      "change_percent": -59.405236982323885
+    },
+    "displacement": {
+      "baseline": {
+        "median": 0.925580203,
+        "min": 0.922503143,
+        "max": 0.928779447
+      },
+      "refactored": {
+        "median": 0.433218841,
+        "min": 0.432949417,
+        "max": 0.459105897
+      },
+      "change_percent": -53.19488904409939
+    },
+    "constraints": {
+      "baseline": {
+        "median": 3.227037235,
+        "min": 3.225455676,
+        "max": 3.238878069
+      },
+      "refactored": {
+        "median": 3.089549957,
+        "min": 3.088794438,
+        "max": 3.099169027
+      },
+      "change_percent": -4.260480062294669
+    },
+    "nodal_integration": {
+      "baseline": {
+        "median": 7.22831654,
+        "min": 7.226353143,
+        "max": 7.232972404
+      },
+      "refactored": {
+        "median": 6.7066073500000005,
+        "min": 6.704125442,
+        "max": 6.7403083089999996
+      },
+      "change_percent": -7.217575311111091
+    },
+    "critical_timestep": {
+      "baseline": {
+        "median": 4.647121553,
+        "min": 4.626708229,
+        "max": 4.653100738
+      },
+      "refactored": {
+        "median": 4.546946621,
+        "min": 4.541115921,
+        "max": 4.54993044
+      },
+      "change_percent": -2.155633995313311
+    },
+    "mass": {
+      "baseline": {
+        "median": 0.000102929,
+        "min": 0.000102808,
+        "max": 0.000105019
+      },
+      "refactored": {
+        "median": 8.6269e-05,
+        "min": 8.2749e-05,
+        "max": 8.8369e-05
+      },
+      "change_percent": -16.1859145624654
+    },
+    "rss_kib": {
+      "baseline": {
+        "median": 16032,
+        "min": 16024,
+        "max": 16032
+      },
+      "refactored": {
+        "median": 14160,
+        "min": 14160,
+        "max": 14196
+      },
+      "change_percent": -11.676646706586824
+    }
+  },
+  "correctness": "56 tests, 694 assertions; Release and ASan/UBSan passed. All 16 refactored CSVs byte-identical to uninstrumented baseline.",
+  "limitations": [
+    "320x320 measurements stopped at user request; excluded from comparison.",
+    "No GPU backend or GPU measurements.",
+    "Legacy callback spans are temporary snapshots; archetype record access uses proxies.",
+    "Material configuration remains objects in ScalarStorage; persistent constitutive history is SoA."
+  ]
+}

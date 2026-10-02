@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <utility>
-#include <vector>
+#include "wavecore/fields/SimulationRecords.hpp"
 
 #include "wavecore/elements/IElementConcept.hpp"
 
@@ -22,7 +22,7 @@ public:
     [[nodiscard]] std::size_t add_element(properties_type properties) {
         const auto index = properties_.size();
         properties_.push_back(std::move(properties));
-        geometry_.emplace_back();
+        geometry_.add();
         return index;
     }
 
@@ -32,13 +32,13 @@ public:
     [[nodiscard]] const properties_type& properties(std::size_t index) const {
         return properties_.at(index);
     }
-    [[nodiscard]] geometry_type& geometry(std::size_t index) { return geometry_.at(index); }
-    [[nodiscard]] const geometry_type& geometry(std::size_t index) const { return geometry_.at(index); }
+    [[nodiscard]] auto geometry(std::size_t index) { return geometry_.at(index); }
+    [[nodiscard]] auto geometry(std::size_t index) const { return geometry_.at(index); }
 
 private:
     Element element_;
-    std::vector<properties_type> properties_;
-    std::vector<geometry_type> geometry_;
+    ScalarStorage<properties_type> properties_;
+    ElementGeometryFields<Element> geometry_;
 };
 
 } // namespace wavecore

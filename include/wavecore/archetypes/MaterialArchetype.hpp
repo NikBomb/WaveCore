@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <utility>
-#include <vector>
+#include "wavecore/fields/FieldStorage.hpp"
 
 #include "wavecore/materials/IMaterialConcept.hpp"
 
@@ -26,7 +26,7 @@ public:
     [[nodiscard]] const Material& material(std::size_t index) const { return materials_.at(index); }
 
 private:
-    std::vector<Material> materials_;
+    ScalarStorage<Material> materials_;
 };
 
 } // namespace wavecore
